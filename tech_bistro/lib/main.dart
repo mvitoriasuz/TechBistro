@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Tech Bistro', style: TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF098000F), // Altere a cor aqui
+          backgroundColor: const Color(0xFF098000F), 
           leading: Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.menu, color: Colors.white),

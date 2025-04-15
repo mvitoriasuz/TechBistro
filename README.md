@@ -1,5 +1,4 @@
-# TechBistro
-<img src="" width="250"/>
+<img src="https://github.com/mvitoriasuz/TechBistro/blob/main/Prototípação/Logomarca/%5BSem%20Fundo%20-%20Branco%5D%20-%20Logo%20TechBistro.png" width="80"/>
 Projeto Integrador do 5º semestre da FATEC Araras
 
 # Objetivo 
@@ -21,4 +20,4 @@ Esse projeto foi desenvolvido com as seguintes ferramentas:
 ## Integrantes do Projeto
 - [Maria Vitoria Suzarth](https://github.com/mvitoriasuz)
 - [Rafaela de Jesus Bispo dos Santos](https://github.com/Rafaelajbsantos)
-- [Bruno Campagnol de Oliveira]([https://github.com/Alvarez-T](https://github.com/brunounky))
+- [Bruno Campagnol de Oliveira](https://github.com/brunounky)

@@ -1,23 +1,8 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
-
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MainApp());
 }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
-    );
-  }
-}
-
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -57,6 +42,7 @@ class MainApp extends StatelessWidget {
                 title: const Text('Salão'),
                 onTap: () {
                   Navigator.pop(context);
+                  // link do salae
                 },
               ),
               ListTile(

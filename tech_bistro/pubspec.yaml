@@ -21,4 +21,10 @@ flutter:
   assets:
       - assets/
 
+  fonts:
+    - family: Nats
+      fonts:
+        - asset: assets/fonts/NATS-Regular.ttf
+
+
 

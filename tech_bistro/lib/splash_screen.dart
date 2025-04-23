@@ -22,32 +22,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            'assets/img/logo_branco.svg',
-            width: 250,
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'TechBistro',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Nats',
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      body: Center(
+        child: SvgPicture.asset(
+          'assets/logo_branco.svg',
+          width: 150,
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }

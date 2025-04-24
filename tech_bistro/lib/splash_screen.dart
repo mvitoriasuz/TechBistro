@@ -13,7 +13,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 20), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainApp()),
@@ -30,12 +30,12 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.asset('assets/logo_branco.svg', width: 250),
-            const SizedBox(height: 20), // Espaço entre a logo e o texto
+            const SizedBox(height: 20),
             const Text(
               'TECHBISTRO',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 36,
                 fontFamily: 'Nats',
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,

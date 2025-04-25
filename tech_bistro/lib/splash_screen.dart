@@ -29,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset('assets/logo_branco.svg', width: 250),
             const SizedBox(height: 20),
             const Text(
               'TECHBISTRO',

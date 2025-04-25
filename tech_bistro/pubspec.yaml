@@ -1,5 +1,5 @@
-name: tech_bistro
-description: "A new Flutter project."
+name: techbistro
+description: "Comanda digital para restaurantes."
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
   flutter_svg: ^2.1.0
 
 dev_dependencies:
@@ -24,3 +25,8 @@ flutter:
     - family: Nats
       fonts:
         - asset: assets/fonts/NATS-Regular.ttf
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/app_icon.png"

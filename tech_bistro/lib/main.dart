@@ -55,7 +55,7 @@ class MainApp extends StatelessWidget {
                 decoration: BoxDecoration(color: Color(0xFFA63D4A)),
                 child: Text(
                   'Ambientes',
-                  style: TextStyle(color: Colors.white, fontSize: 3),
+                  style: TextStyle(color: Colors.white, fontSize: 25),
                 ),
               ),
               ListTile(
@@ -70,49 +70,17 @@ class MainApp extends StatelessWidget {
                   Navigator.pop(context);
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.kitchen),
+                title: const Text('Relatórios'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              )
             ],
           ),
         ),
-        body: const Center(child: Text('foto ou vetor de mesas, m3')),
-        bottomNavigationBar: BottomAppBar(
-          color: appBarColor,
-          height: 50,
-          child: SizedBox(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.contact_page_rounded, color: Colors.white),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.history, color: Colors.white),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.history, color: Colors.white),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  iconSize: 28,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-        ),
+        body: const Center(child: Text('Não há mesas abertas')),
       ),
     );
   }

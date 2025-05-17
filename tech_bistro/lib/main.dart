@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
+import 'new_order.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,16 +34,14 @@ class _MainAppState extends State<MainApp> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Tech Bistro',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Tech Bistro', style: TextStyle(color: Colors.white)),
         backgroundColor: appBarColor,
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         ),
         actions: [
           IconButton(
@@ -80,39 +79,50 @@ class _MainAppState extends State<MainApp> {
               onTap: () {
                 Navigator.pop(context);
               },
-            )
+            ),
           ],
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: mesas.isEmpty
-            ? const Center(
-                child: Text(
-                  'Não há mesas abertas',
-                  style: TextStyle(fontSize: 18),
-                ),
-              )
-            : ListView.builder(
-                itemCount: mesas.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // lembrar de colocar pra abrir a tela de mesas
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: appBarColor,
+        child:
+            mesas.isEmpty
+                ? const Center(
+                  child: Text(
+                    'Não há mesas abertas',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                )
+                : ListView.builder(
+                  itemCount: mesas.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NovoPedido(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: appBarColor,
+                        ),
+                        child: Text(
+                          'Mesa ${mesas[index]}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                      child: Text('Mesa ${mesas[index]}',
-                          style: const TextStyle(fontSize: 20)),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -75,7 +75,7 @@ class _MainAppState extends State<MainApp> {
             ),
             ListTile(
               leading: const Icon(Icons.kitchen),
-              title: const Text('Relatórios'),
+              title: const Text('Administração'),
               onTap: () {
                 Navigator.pop(context);
               },

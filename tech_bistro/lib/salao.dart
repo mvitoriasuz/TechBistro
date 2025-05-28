@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'new_order.dart';
+import 'mesa.dart';
 
 class SalaoPage extends StatefulWidget {
   const SalaoPage({super.key});
@@ -83,7 +83,7 @@ class _SalaoPageState extends State<SalaoPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const NovoPedido(),
+                            builder: (context) => const Mesa(),
                           ),
                         );
                       },

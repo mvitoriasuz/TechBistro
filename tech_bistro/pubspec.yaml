@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_launcher_icons: ^0.14.3
   flutter_svg: ^2.1.0
   supabase_flutter: ^1.10.7
 
@@ -17,17 +16,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-
-flutter:
-  uses-material-design: true
-  assets:
-      - assets/
-  fonts:
-    - family: Nats
-      fonts:
-        - asset: assets/fonts/NATS-Regular.ttf
+  flutter_launcher_icons: ^0.14.3
 
 flutter_icons:
   android: true
   ios: true
   image_path: "assets/app_icon.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+  fonts:
+    - family: Nats
+      fonts:
+        - asset: assets/fonts/NATS-Regular.ttf

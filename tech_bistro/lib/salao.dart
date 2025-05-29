@@ -20,10 +20,11 @@ class _SalaoPageState extends State<SalaoPage> {
         title: const Text('Tech Bistro', style: TextStyle(color: Colors.white)),
         backgroundColor: appBarColor,
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         ),
         actions: [
           IconButton(
@@ -38,7 +39,10 @@ class _SalaoPageState extends State<SalaoPage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(color: Color(0xFFA63D4A)),
-              child: Text('Ambientes', style: TextStyle(color: Colors.white, fontSize: 25)),
+              child: Text(
+                'Ambientes',
+                style: TextStyle(color: Colors.white, fontSize: 25),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.restaurant),
@@ -64,40 +68,47 @@ class _SalaoPageState extends State<SalaoPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: mesas.isEmpty
-            ? const Center(
-                child: Text(
-                  'Não há mesas abertas',
-                  style: TextStyle(fontSize: 18),
-                ),
-              )
-            : ListView.builder(
-                itemCount: mesas.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Mesa(),
+        child:
+            mesas.isEmpty
+                ? const Center(
+                  child: Text(
+                    'Não há mesas abertas',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                )
+                : ListView.builder(
+                  itemCount: mesas.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      MesaPage(numeroMesa: mesas[index]),
+                            ),
+                          );
+                        },
+
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: appBarColor,
+                        ),
+                        child: Text(
+                          'Mesa ${mesas[index]}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: appBarColor,
+                        ),
                       ),
-                      child: Text(
-                        'Mesa ${mesas[index]}',
-                        style: const TextStyle(fontSize: 20, color: Colors.white),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

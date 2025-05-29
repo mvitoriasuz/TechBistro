@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NewOrder extends StatefulWidget {
-  const NewOrder({super.key});
+  final int idMesa;
+
+  const NewOrder({Key? key, required this.idMesa}) : super(key: key);
 
   @override
   State<NewOrder> createState() => _NewOrderState();
 }
+
 
 class _NewOrderState extends State<NewOrder> {
   final supabase = Supabase.instance.client;
   List<dynamic> pratos = [];
   Map<int, int> quantidades = {};
   bool loading = true;
+  bool temAlergia = false;
+  final TextEditingController obsController = TextEditingController();
 
   @override
   void initState() {
@@ -31,25 +36,133 @@ class _NewOrderState extends State<NewOrder> {
         loading = false;
       });
     } catch (e) {
-      setState(() {
-        loading = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro ao carregar pratos: $e')));
+      setState(() => loading = false);
+      _mostrarSnackBar('Erro ao carregar pratos: $e');
     }
   }
 
-void _enviarPedido(List<Map<String, dynamic>> pedido, String tipo, String texto) {
-  print('Pedido: $pedido');
-  print('Informações adicionais: $tipo');
+  void _mostrarSnackBar(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
+  }
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Pedido enviado com sucesso!')),
-  );
+  Future<void> _enviarPedido(
+    List<Map<String, dynamic>> pedido,
+    String? observacao,
+    String status,
+    int idMesa,
+  ) async {
+    try {
+      for (var item in pedido) {
+        await supabase.from('pedidos').insert({
+          'id_prato': item['id'],
+          'qtd_pedido': item['quantidade'],
+          'observacao_pedido': observacao,
+          'status_pedido': status,
+          'id_mesa': idMesa,
+        });
+      }
+      _mostrarSnackBar('Pedido enviado com sucesso!');
+      Navigator.pop(context);
+    } catch (e) {
+      _mostrarSnackBar('Erro ao enviar pedido: $e');
+    }
+  }
 
-  Navigator.pop(context); 
-}
+  void _confirmarPedido() {
+    final pedidoFinal = pratos
+        .where((prato) => quantidades[prato['id']]! > 0)
+        .map((prato) => {
+              'id': prato['id'],
+              'nome': prato['nome_prato'],
+              'quantidade': quantidades[prato['id']],
+              'valor_unitario': prato['valor_prato'],
+            })
+        .toList();
+
+    if (pedidoFinal.isEmpty) {
+      _mostrarSnackBar('Adicione ao menos 1 item ao pedido.');
+      return;
+    }
+
+    _mostrarPopup(pedidoFinal);
+  }
+
+  void _mostrarPopup(List<Map<String, dynamic>> pedidoFinal) {
+    final alergicoController = TextEditingController();
+    final obsAdicionaisController = TextEditingController();
+    bool mostrarAlergico = false;
+    bool mostrarObs = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Informações adicionais'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => setState(() => mostrarAlergico = !mostrarAlergico),
+                        child: const Text('ALÉRGICOS'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() => mostrarObs = !mostrarObs),
+                        child: const Text('OBSERVAÇÕES'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (mostrarAlergico)
+                    TextField(
+                      controller: alergicoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Informe alergias',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                  if (mostrarAlergico) const SizedBox(height: 12),
+                  if (mostrarObs)
+                    TextField(
+                      controller: obsAdicionaisController,
+                      decoration: const InputDecoration(
+                        labelText: 'Observações adicionais',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final alergicos = alergicoController.text;
+                    final obs = obsAdicionaisController.text;
+                    final idMesa = widget.idMesa;
+                    final observacao = obs.isEmpty ? null : obs;
+                    final status = alergicos.isEmpty ? 'pendente' : 'alérgico: $alergicos';
+
+                    _enviarPedido(pedidoFinal, observacao, status, idMesa);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('ENVIAR PEDIDO'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,19 +177,17 @@ void _enviarPedido(List<Map<String, dynamic>> pedido, String tipo, String texto)
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body:
-          loading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: fetchPratos,
+              child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
                     const Text(
                       'Adicionar Itens ao Pedido',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -93,31 +204,22 @@ void _enviarPedido(List<Map<String, dynamic>> pedido, String tipo, String texto)
                           return Card(
                             child: ListTile(
                               title: Text(nome),
-                              subtitle: Text(
-                                '$categoria - R\$ ${valor.toStringAsFixed(2)}',
-                              ),
+                              subtitle: Text('$categoria - R\$ ${valor.toStringAsFixed(2)}'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.remove),
-                                    onPressed: () {
-                                      setState(() {
-                                        if (quantidades[id]! > 0) {
-                                          quantidades[id] =
-                                              quantidades[id]! - 1;
-                                        }
-                                      });
-                                    },
+                                    onPressed: () => setState(() {
+                                      if (quantidade > 0) quantidades[id] = quantidade - 1;
+                                    }),
                                   ),
                                   Text('$quantidade'),
                                   IconButton(
                                     icon: const Icon(Icons.add),
-                                    onPressed: () {
-                                      setState(() {
-                                        quantidades[id] = quantidades[id]! + 1;
-                                      });
-                                    },
+                                    onPressed: () => setState(() {
+                                      quantidades[id] = quantidade + 1;
+                                    }),
                                   ),
                                 ],
                               ),
@@ -130,144 +232,15 @@ void _enviarPedido(List<Map<String, dynamic>> pedido, String tipo, String texto)
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: appBarColor,
-                        ),
-                        onPressed: () {
-                          final pedidoFinal =
-                              pratos
-                                  .where(
-                                    (prato) => quantidades[prato['id']]! > 0,
-                                  )
-                                  .map(
-                                    (prato) => {
-                                      'id': prato['id'],
-                                      'nome': prato['nome_prato'],
-                                      'quantidade': quantidades[prato['id']],
-                                      'valor_unitario': prato['valor_prato'],
-                                    },
-                                  )
-                                  .toList();
-
-                          if (pedidoFinal.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Adicione ao menos 1 item ao pedido.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          showDialog( //popup, arrumar a posicao dos botoes e trocar nome do banco
-                            context: context,
-                            builder: (context) {
-                              bool mostrarAlergico = false;
-                              bool mostrarObs = false;
-                              final alergicoController =
-                                  TextEditingController();
-                              final obsController = TextEditingController();
-
-                              return StatefulBuilder(
-                                builder:
-                                    (context, setState) => AlertDialog(
-                                      title: const Text(
-                                        'Informações adicionais',
-                                      ),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Wrap(
-                                            spacing: 10,
-                                            children: [
-                                              ElevatedButton(
-                                                onPressed:
-                                                    () => setState(
-                                                      () =>
-                                                          mostrarAlergico =
-                                                              !mostrarAlergico,
-                                                    ),
-                                                child: const Text('ALÉRGICOS'),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed:
-                                                    () => setState(
-                                                      () =>
-                                                          mostrarObs =
-                                                              !mostrarObs,
-                                                    ),
-                                                child: const Text(
-                                                  'OBSERVAÇÕES',
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          if (mostrarAlergico)
-                                            TextField(
-                                              controller: alergicoController,
-                                              decoration: const InputDecoration(
-                                                labelText: 'Informe alergias',
-                                                border: OutlineInputBorder(),
-                                              ),
-                                              maxLines: 2,
-                                            ),
-                                          if (mostrarAlergico)
-                                            const SizedBox(height: 12),
-                                          if (mostrarObs)
-                                            TextField(
-                                              controller: obsController,
-                                              decoration: const InputDecoration(
-                                                labelText:
-                                                    'Observações adicionais',
-                                                border: OutlineInputBorder(),
-                                              ),
-                                              maxLines: 2,
-                                            ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(
-                                              context,
-                                            ).pop(); // acaba popup
-                                          },
-                                          child: const Text('Cancelar'),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            final alergicos =
-                                                alergicoController.text;
-                                            final obs = obsController.text;
-
-                                            _enviarPedido( //popup abre
-                                              pedidoFinal,
-                                              'alergico: $alergicos | obs: $obs',
-                                              '',
-                                            );
-                                            Navigator.of( //fecha popup
-                                              context,
-                                            ).pop();
-                                          },
-                                          child: const Text('ENVIAR PEDIDO'),
-                                        ),
-                                      ],
-                                    ),
-                              );
-                            },
-                          );
-                        },
-                        child: const Text(
-                          'CONFIRMAR PEDIDO',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: appBarColor),
+                        onPressed: _confirmarPedido,
+                        child: const Text('CONFIRMAR PEDIDO', style: TextStyle(fontSize: 18, color: Colors.white)),
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
     );
   }
 }

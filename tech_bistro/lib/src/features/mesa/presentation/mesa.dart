@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../new_order.dart';
+import 'new_order.dart';
 
 class MesaPage extends StatefulWidget {
   final int numeroMesa;
@@ -8,7 +8,7 @@ class MesaPage extends StatefulWidget {
   const MesaPage({Key? key, required this.numeroMesa}) : super(key: key);
 
   @override
-  State<MesaPage> createState() => _MesaPageState();1
+  State<MesaPage> createState() => _MesaPageState();
 }
 
 class _MesaPageState extends State<MesaPage> {

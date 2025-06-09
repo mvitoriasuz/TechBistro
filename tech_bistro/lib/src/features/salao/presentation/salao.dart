@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'mesa.dart';
+import '../../mesa/presentation/mesa.dart';
 
 class SalaoPage extends StatefulWidget {
   const SalaoPage({super.key});

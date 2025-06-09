@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'salao.dart';
+import 'src/features/salao/presentation/salao.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

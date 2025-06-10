@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:techbistro/src/ui/theme/app_colors.dart';
 import '../../mesa/presentation/mesa.dart';
 import '../../cozinha/presentation/cozinha.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SalaoPage extends StatefulWidget {
   const SalaoPage({super.key});
@@ -62,7 +63,6 @@ class _SalaoPageState extends State<SalaoPage> {
                 );
               },
             ),
-
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Administração'),
@@ -121,10 +121,17 @@ class _SalaoPageState extends State<SalaoPage> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Image.asset(
-                                'assets/mesa.png',
-                                width: 60,
-                                height: 60,
+                              Expanded(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final size = constraints.maxWidth * 0.8;
+                                    return SvgPicture.asset(
+                                      'assets/mesa.svg',
+                                      width: size,
+                                      height: size,
+                                    );
+                                  },
+                                ),
                               ),
                             ],
                           ),

@@ -62,70 +62,76 @@ class _MesaPageState extends State<MesaPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade400,
-                    blurRadius: 4,
-                    offset: const Offset(2, 2),
+        child: loading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  // Card com total do pedido
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      title: Text(
+                        'Detalhe da Mesa ${widget.numeroMesa}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Total do pedido: R\$ ${totalPedido.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Card com itens do pedido
+                  Expanded(
+                    child: Card(
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: pedidos.isEmpty
+                            ? const Center(child: Text('Nenhum pedido feito ainda.'))
+                            : ListView.builder(
+                                itemCount: pedidos.length,
+                                itemBuilder: (context, index) {
+                                  final pedido = pedidos[index];
+                                  final nomePrato = pedido['pratos']?['nome_prato'] ?? 'Prato';
+                                  final qtd = pedido['qtd_pedido'] ?? 0;
+                                  final valorPrato = pedido['pratos']?['valor_prato'] ?? 0.0;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Text('$nomePrato x$qtd - R\$ ${(valorPrato * qtd).toStringAsFixed(2)}'),
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Botão novo pedido
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: appBarColor),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NewOrder(idMesa: widget.numeroMesa),
+                          ),
+                        );
+                        fetchPedidos(); // Atualiza os dados após novo pedido
+                      },
+                      child: const Text('Fazer novo pedido', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ),
                   ),
                 ],
               ),
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Detalhe da Mesa ${widget.numeroMesa}', style:TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Total do pedido: R\$ ${totalPedido.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 18),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Itens pedidos:',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                        ),
-                        ...pedidos.map((pedido) {
-                          final nomePrato = pedido['pratos']?['nome_prato'] ?? 'Prato';
-                          final qtd = pedido['qtd_pedido'] ?? 0;
-                          final valorPrato = pedido['pratos']?['valor_prato'] ?? 0.0;
-                          return Text('$nomePrato x$qtd - R\$ ${(valorPrato * qtd).toStringAsFixed(2)}');
-                        }).toList(),
-                      ],
-                    ),
-            ),
-
-            const SizedBox(height: 30),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: appBarColor),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NewOrder(idMesa: widget.numeroMesa),
-                    ),
-                  );
-                  fetchPedidos();
-                },
-                child: const Text('Fazer novo pedido', style: TextStyle(fontSize: 18, color: Colors.white)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

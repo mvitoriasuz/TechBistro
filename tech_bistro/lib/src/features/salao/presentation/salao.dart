@@ -40,7 +40,7 @@ class _SalaoPageState extends State<SalaoPage> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFFA63D4A)),
+              decoration: BoxDecoration(color: Color(0xFF8C0010)),
               child: Text(
                 'Ambientes',
                 style: TextStyle(color: Colors.white, fontSize: 25),
@@ -64,7 +64,7 @@ class _SalaoPageState extends State<SalaoPage> {
             ),
 
             ListTile(
-              leading: const Icon(Icons.kitchen),
+              leading: const Icon(Icons.settings),
               title: const Text('Administração'),
               onTap: () => Navigator.pop(context),
             ),

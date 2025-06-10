@@ -58,7 +58,6 @@ class _MesaPageState extends State<MesaPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mesa ${widget.numeroMesa}', style: const TextStyle(color: Colors.white)),
         backgroundColor: appBarColor,
       ),
       body: Padding(
@@ -84,9 +83,7 @@ class _MesaPageState extends State<MesaPage> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Overview',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        const Text('Detalhe da Mesa ${widget.numeroMesa}', style:TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         Text(

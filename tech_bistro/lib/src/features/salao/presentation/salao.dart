@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:techbistro/src/ui/theme/app_colors.dart';
 import '../../mesa/presentation/mesa.dart';
 import '../../cozinha/presentation/cozinha.dart';
 
@@ -139,9 +140,11 @@ class _SalaoPageState extends State<SalaoPage> {
             mesas.add(mesas.length + 1);
           });
         },
-        backgroundColor: appBarColor,
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.secondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

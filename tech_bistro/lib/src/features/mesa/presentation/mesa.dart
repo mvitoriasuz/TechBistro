@@ -29,7 +29,7 @@ class _MesaPageState extends State<MesaPage> {
     try {
       final response = await supabase
           .from('pedidos')
-          .select('id, id_prato, qtd_pedido, observacao_pedido, status_pedido, id_mesa, pratos (valor_prato)')
+          .select('id, id_prato, qtd_pedido, observacao_pedido, status_pedido, id_mesa, pratos (nome_prato, valor_prato)')
           .eq('id_mesa', widget.numeroMesa);
 
       double soma = 0.0;

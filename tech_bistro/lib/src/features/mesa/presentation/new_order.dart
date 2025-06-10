@@ -10,14 +10,11 @@ class NewOrder extends StatefulWidget {
   State<NewOrder> createState() => _NewOrderState();
 }
 
-
 class _NewOrderState extends State<NewOrder> {
   final supabase = Supabase.instance.client;
   List<dynamic> pratos = [];
   Map<int, int> quantidades = {};
   bool loading = true;
-  bool temAlergia = false;
-  final TextEditingController obsController = TextEditingController();
 
   @override
   void initState() {
@@ -48,7 +45,7 @@ class _NewOrderState extends State<NewOrder> {
   Future<void> _enviarPedido(
     List<Map<String, dynamic>> pedido,
     String? observacao,
-    String status,
+    String? alergia,
     int idMesa,
   ) async {
     try {
@@ -57,7 +54,8 @@ class _NewOrderState extends State<NewOrder> {
           'id_prato': item['id'],
           'qtd_pedido': item['quantidade'],
           'observacao_pedido': observacao,
-          'status_pedido': status,
+          'alergia_pedido': alergia,
+          'status_pedido': 'pendente',
           'id_mesa': idMesa,
         });
       }
@@ -145,13 +143,13 @@ class _NewOrderState extends State<NewOrder> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    final alergicos = alergicoController.text;
-                    final obs = obsAdicionaisController.text;
+                    final alergicos = alergicoController.text.trim();
+                    final obs = obsAdicionaisController.text.trim();
                     final idMesa = widget.idMesa;
                     final observacao = obs.isEmpty ? null : obs;
-                    final status = alergicos.isEmpty ? 'pendente' : 'alérgico: $alergicos';
+                    final alergia = alergicos.isEmpty ? null : alergicos;
 
-                    _enviarPedido(pedidoFinal, observacao, status, idMesa);
+                    _enviarPedido(pedidoFinal, observacao, alergia, idMesa);
                     Navigator.of(context).pop();
                   },
                   child: const Text('ENVIAR PEDIDO'),

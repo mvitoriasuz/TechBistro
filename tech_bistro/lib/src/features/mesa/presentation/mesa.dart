@@ -69,6 +69,7 @@ return Scaffold(
         ? const Center(child: CircularProgressIndicator())
         : Column(
             children: [
+              // RESOLVIDO: Card com largura controlada
               SizedBox(
                 width: double.infinity,
                 child: Card(

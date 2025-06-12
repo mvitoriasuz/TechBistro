@@ -224,7 +224,6 @@ class _MesaPageState extends State<MesaPage> {
                           builder: (context) {
                             final TextEditingController valorController =
                                 TextEditingController();
-
                             return AlertDialog(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

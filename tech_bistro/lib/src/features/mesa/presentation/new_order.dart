@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:techbistro/src/ui/theme/app_colors.dart';
 
 class NewOrder extends StatefulWidget {
   final int idMesa;
@@ -12,7 +13,7 @@ class NewOrder extends StatefulWidget {
 
 class _NewOrderState extends State<NewOrder> {
   final supabase = Supabase.instance.client;
-  List<dynamic> pratos = [];
+  Map<String, List<dynamic>> pratosPorCategoria = {};
   Map<int, int> quantidades = {};
   bool loading = true;
 
@@ -25,11 +26,16 @@ class _NewOrderState extends State<NewOrder> {
   Future<void> fetchPratos() async {
     try {
       final response = await supabase.from('pratos').select();
+
+      Map<String, List<dynamic>> agrupados = {};
+      for (var prato in response) {
+        final categoria = prato['categoria_prato'] ?? 'Outros';
+        agrupados.putIfAbsent(categoria, () => []).add(prato);
+        quantidades[prato['id']] = 0;
+      }
+
       setState(() {
-        pratos = response;
-        for (var prato in pratos) {
-          quantidades[prato['id']] = 0;
-        }
+        pratosPorCategoria = agrupados;
         loading = false;
       });
     } catch (e) {
@@ -39,7 +45,9 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   void _mostrarSnackBar(String mensagem) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   Future<void> _enviarPedido(
@@ -67,15 +75,18 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   void _confirmarPedido() {
-    final pedidoFinal = pratos
-        .where((prato) => quantidades[prato['id']]! > 0)
-        .map((prato) => {
-              'id': prato['id'],
-              'nome': prato['nome_prato'],
-              'quantidade': quantidades[prato['id']],
-              'valor_unitario': prato['valor_prato'],
-            })
-        .toList();
+    final pedidoFinal =
+        quantidades.entries.where((entry) => entry.value > 0).map((entry) {
+          final prato = pratosPorCategoria.values
+              .expand((x) => x)
+              .firstWhere((p) => p['id'] == entry.key);
+          return {
+            'id': prato['id'],
+            'nome': prato['nome_prato'],
+            'quantidade': entry.value,
+            'valor_unitario': prato['valor_prato'],
+          };
+        }).toList();
 
     if (pedidoFinal.isEmpty) {
       _mostrarSnackBar('Adicione ao menos 1 item ao pedido.');
@@ -98,43 +109,51 @@ class _NewOrderState extends State<NewOrder> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Informações adicionais'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Wrap(
-                    spacing: 10,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => setState(() => mostrarAlergico = !mostrarAlergico),
-                        child: const Text('ALÉRGICOS'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => setState(() => mostrarObs = !mostrarObs),
-                        child: const Text('OBSERVAÇÕES'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (mostrarAlergico)
-                    TextField(
-                      controller: alergicoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Informe alergias',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Wrap(
+                      spacing: 10,
+                      children: [
+                        ElevatedButton(
+                          onPressed:
+                              () => setState(
+                                () => mostrarAlergico = !mostrarAlergico,
+                              ),
+                          child: const Text('ALÉRGICOS'),
+                        ),
+                        ElevatedButton(
+                          onPressed:
+                              () => setState(() => mostrarObs = !mostrarObs),
+                          child: const Text('OBSERVAÇÕES'),
+                        ),
+                      ],
                     ),
-                  if (mostrarAlergico) const SizedBox(height: 12),
-                  if (mostrarObs)
-                    TextField(
-                      controller: obsAdicionaisController,
-                      decoration: const InputDecoration(
-                        labelText: 'Observações adicionais',
-                        border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    if (mostrarAlergico)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TextField(
+                          controller: alergicoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Informe alergias',
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 2,
+                        ),
                       ),
-                      maxLines: 2,
-                    ),
-                ],
+                    if (mostrarObs)
+                      TextField(
+                        controller: obsAdicionaisController,
+                        decoration: const InputDecoration(
+                          labelText: 'Observações adicionais',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 2,
+                      ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -145,11 +164,15 @@ class _NewOrderState extends State<NewOrder> {
                   onPressed: () {
                     final alergicos = alergicoController.text.trim();
                     final obs = obsAdicionaisController.text.trim();
-                    final idMesa = widget.idMesa;
                     final observacao = obs.isEmpty ? null : obs;
                     final alergia = alergicos.isEmpty ? null : alergicos;
 
-                    _enviarPedido(pedidoFinal, observacao, alergia, idMesa);
+                    _enviarPedido(
+                      pedidoFinal,
+                      observacao,
+                      alergia,
+                      widget.idMesa,
+                    );
                     Navigator.of(context).pop();
                   },
                   child: const Text('ENVIAR PEDIDO'),
@@ -160,6 +183,12 @@ class _NewOrderState extends State<NewOrder> {
         );
       },
     );
+  }
+
+/// Função para capitalizar a primeira letra de uma string
+    String capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 
   @override
@@ -175,49 +204,149 @@ class _NewOrderState extends State<NewOrder> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: fetchPratos,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Adicionar Itens ao Pedido',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body:
+          loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: appBarColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: Text(
+                            'PEDIDO MESA ${widget.idMesa}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'Nats',
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: pratos.length,
+                  ),
+                  Container(
+                    color: const Color(0xFFF4F4F4),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.65,
+                      child: PageView.builder(
+                        itemCount: pratosPorCategoria.length,
+                        controller: PageController(viewportFraction: 0.9),
                         itemBuilder: (context, index) {
-                          final prato = pratos[index];
-                          final id = prato['id'];
-                          final nome = prato['nome_prato'];
-                          final categoria = prato['categoria_prato'];
-                          final valor = prato['valor_prato'];
-                          final quantidade = quantidades[id] ?? 0;
+                          final categoria = pratosPorCategoria.keys.elementAt(
+                            index,
+                          );
+                          final pratos = pratosPorCategoria[categoria]!;
 
                           return Card(
-                            child: ListTile(
-                              title: Text(nome),
-                              subtitle: Text('$categoria - R\$ ${valor.toStringAsFixed(2)}'),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove),
-                                    onPressed: () => setState(() {
-                                      if (quantidade > 0) quantidades[id] = quantidade - 1;
-                                    }),
+                                  Text(
+                                    capitalize(categoria),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Nats',
+                                      color: Color(0xFF840011),
+                                    ),
                                   ),
-                                  Text('$quantidade'),
-                                  IconButton(
-                                    icon: const Icon(Icons.add),
-                                    onPressed: () => setState(() {
-                                      quantidades[id] = quantidade + 1;
-                                    }),
+                                  const SizedBox(height: 12),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: pratos.length,
+                                      itemBuilder: (context, i) {
+                                        final prato = pratos[i];
+                                        final id = prato['id'];
+                                        final nome = prato['nome_prato'];
+                                        final valor = prato['valor_prato'];
+                                        final quantidade = quantidades[id] ?? 0;
+                                        return Card(
+                                          child: ListTile(
+                                            title: Text(nome),
+                                            subtitle: Text(
+                                              'R\$ ${valor.toStringAsFixed(2)}',
+                                            ),
+                                            trailing: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                color: Colors.white,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.remove,
+                                                      color: appBarColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => setState(() {
+                                                          if (quantidade > 0)
+                                                            quantidades[id] =
+                                                                quantidade - 1;
+                                                        }),
+                                                    iconSize: 20,
+                                                    constraints: BoxConstraints(
+                                                      minWidth: 36,
+                                                      minHeight: 36,
+                                                    ),
+                                                    splashRadius: 20,
+                                                  ),
+                                                  Container(
+                                                    width: 40,
+                                                    alignment: Alignment.center,
+                                                    child: Text(
+                                                      '$quantidade',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.add,
+                                                      color: appBarColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => setState(() {
+                                                          quantidades[id] =
+                                                              quantidade + 1;
+                                                        }),
+                                                    iconSize: 20,
+                                                    constraints: BoxConstraints(
+                                                      minWidth: 36,
+                                                      minHeight: 36,
+                                                    ),
+                                                    splashRadius: 20,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ],
                               ),
@@ -226,19 +355,31 @@ class _NewOrderState extends State<NewOrder> {
                         },
                       ),
                     ),
-                    SizedBox(
+                  ),
+                  // BOTÃO CONFIRMAR PEDIDO
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: appBarColor),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.secondary,
+                        ),
                         onPressed: _confirmarPedido,
-                        child: const Text('CONFIRMAR PEDIDO', style: TextStyle(fontSize: 18, color: Colors.white)),
+                        child: const Text(
+                          'Finalizar pedido',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontFamily: 'Nats',
+                          ),
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
     );
   }
 }

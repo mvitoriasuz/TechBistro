@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/mvitoriasuz/TechBistro/blob/main/Prototipação/Logomarca/%5BSem%20Fundo%20-%20Branco%5D%20-%20Logo%20TechBistro.png" width="150"/>
+  <img src="https://github.com/mvitoriasuz/TechBistro/blob/main/Prototipo/Logomarca/%5BSem%20Fundo%20-%20Preto%5D%20-%20Logo%20TechBistro.png" width="100"/>
 
   <h2>🍽️ Tech Bistro - Projeto Integrador</h2>
   <p><strong>5º semestre - FATEC Araras</strong></p>
@@ -25,21 +25,13 @@ O aplicativo será seguro, e preparado para operar com alto desempenho e qualida
 Esse projeto foi desenvolvido com as seguintes ferramentas:
 
 <p align="center">
-  <a href="https://dart.dev" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/dartlang/dartlang-icon.svg" alt="dart" width="50" height="50"/>
-  </a>
+  <a href="https://dart.dev" target="_blank" rel="noreferrer"><img src="https://www.vectorlogo.zone/logos/dartlang/dartlang-icon.svg" alt="dart" width="50" height="50"/></a>
   &nbsp;&nbsp;
-  <a href="https://www.figma.com/" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/figma/figma-icon.svg" alt="figma" width="50" height="50"/>
-  </a>
+  <a href="https://www.figma.com/" target="_blank" rel="noreferrer"><img src="https://www.vectorlogo.zone/logos/figma/figma-icon.svg" alt="figma" width="50" height="50"/></a>
   &nbsp;&nbsp;
-  <a href="https://flutter.dev" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/flutterio/flutterio-icon.svg" alt="flutter" width="50" height="50"/>
-  </a>
+  <a href="https://flutter.dev" target="_blank" rel="noreferrer"><img src="https://www.vectorlogo.zone/logos/flutterio/flutterio-icon.svg" alt="flutter" width="50" height="50"/></a>
   &nbsp;&nbsp;
-  <a href="https://postman.com" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/getpostman/getpostman-icon.svg" alt="postman" width="50" height="50"/>
-  </a>
+  <a href="https://postman.com" target="_blank" rel="noreferrer"><img src="https://www.vectorlogo.zone/logos/getpostman/getpostman-icon.svg" alt="postman" width="50" height="50"/></a>
 </p>
 
 ---

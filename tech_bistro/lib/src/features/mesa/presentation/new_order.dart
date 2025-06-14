@@ -204,173 +204,39 @@ class _NewOrderState extends State<NewOrder> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body:
-          loading
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
+body: Padding(
+  padding: const EdgeInsets.all(16.0),
+  child: loading
+      ? const Center(child: CircularProgressIndicator())
+      : pratosPorCategoria.isEmpty
+          ? const Center(
+              child: Text(
+                'Nenhum prato encontrado.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            )
+          : Column(
+              children: [
+                // CARD DE CABEÇALHO
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: appBarColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: appBarColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
-                          child: Text(
-                            'PEDIDO MESA ${widget.idMesa}',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontFamily: 'Nats',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    color: const Color(0xFFF4F4F4),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.65,
-                      child: PageView.builder(
-                        itemCount: pratosPorCategoria.length,
-                        controller: PageController(viewportFraction: 0.9),
-                        itemBuilder: (context, index) {
-                          final categoria = pratosPorCategoria.keys.elementAt(
-                            index,
-                          );
-                          final pratos = pratosPorCategoria[categoria]!;
-
-                          return Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 4,
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    capitalize(categoria),
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Nats',
-                                      color: Color(0xFF840011),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      itemCount: pratos.length,
-                                      itemBuilder: (context, i) {
-                                        final prato = pratos[i];
-                                        final id = prato['id'];
-                                        final nome = prato['nome_prato'];
-                                        final valor = prato['valor_prato'];
-                                        final quantidade = quantidades[id] ?? 0;
-                                        return Card(
-                                          child: ListTile(
-                                            title: Text(nome),
-                                            subtitle: Text(
-                                              'R\$ ${valor.toStringAsFixed(2)}',
-                                            ),
-                                            trailing: Container(
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                color: Colors.white,
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.remove,
-                                                      color: appBarColor,
-                                                    ),
-                                                    onPressed:
-                                                        () => setState(() {
-                                                          if (quantidade > 0)
-                                                            quantidades[id] =
-                                                                quantidade - 1;
-                                                        }),
-                                                    iconSize: 20,
-                                                    constraints: BoxConstraints(
-                                                      minWidth: 36,
-                                                      minHeight: 36,
-                                                    ),
-                                                    splashRadius: 20,
-                                                  ),
-                                                  Container(
-                                                    width: 40,
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      '$quantidade',
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.add,
-                                                      color: appBarColor,
-                                                    ),
-                                                    onPressed:
-                                                        () => setState(() {
-                                                          quantidades[id] =
-                                                              quantidade + 1;
-                                                        }),
-                                                    iconSize: 20,
-                                                    constraints: BoxConstraints(
-                                                      minWidth: 36,
-                                                      minHeight: 36,
-                                                    ),
-                                                    splashRadius: 20,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  // BOTÃO CONFIRMAR PEDIDO
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                        ),
-                        onPressed: _confirmarPedido,
-                        child: const Text(
-                          'Finalizar pedido',
-                          style: TextStyle(
-                            fontSize: 18,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          'PEDIDO MESA ${widget.idMesa}',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontFamily: 'Nats',
                           ),
@@ -378,8 +244,138 @@ class _NewOrderState extends State<NewOrder> {
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // CARROSSEL DE CATEGORIAS
+                Expanded(
+                  child: Container(
+                    child: PageView.builder(
+                      itemCount: pratosPorCategoria.length,
+                      controller: PageController(viewportFraction: 0.9),
+                      itemBuilder: (context, index) {
+                        final categoria =
+                            pratosPorCategoria.keys.elementAt(index);
+                        final pratos = pratosPorCategoria[categoria]!;
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  capitalize(categoria),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Nats',
+                                    color: Color(0xFF840011),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: pratos.length,
+                                    itemBuilder: (context, i) {
+                                      final prato = pratos[i];
+                                      final id = prato['id'];
+                                      final nome = prato['nome_prato'];
+                                      final valor = prato['valor_prato'];
+                                      final quantidade = quantidades[id] ?? 0;
+                                      return Card(
+                                        child: ListTile(
+                                          title: Text(nome),
+                                          subtitle: Text(
+                                            'R\$ ${valor.toStringAsFixed(2)}',
+                                          ),
+                                          trailing: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              color: Colors.white,
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.remove,
+                                                    color: appBarColor,
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    if (quantidade > 0) {
+                                                      quantidades[id] =
+                                                          quantidade - 1;
+                                                    }
+                                                  }),
+                                                ),
+                                                Container(
+                                                  width: 40,
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    '$quantidade',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.add,
+                                                    color: appBarColor,
+                                                  ),
+                                                  onPressed: () => setState(() {
+                                                    quantidades[id] =
+                                                        quantidade + 1;
+                                                  }),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                // BOTÃO CONFIRMAR
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondary,
+                      ),
+                      onPressed: _confirmarPedido,
+                      child: const Text(
+                        'Finalizar pedido',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontFamily: 'Nats',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+),
     );
   }
 }

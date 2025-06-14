@@ -125,6 +125,7 @@ class _SalaoPageState extends State<SalaoPage> {
                     child: Text(
                       'Não há mesas abertas',
                       style: TextStyle(fontSize: 18),
+                      
                     ),
                   )
                 : GridView.builder(
@@ -165,12 +166,13 @@ class _SalaoPageState extends State<SalaoPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Expanded(
+                                Flexible(
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
                                       final size = constraints.maxWidth * 0.8;
                                       return SvgPicture.asset(
                                         'assets/mesa.svg',
+                                        fit: BoxFit.cover,
                                         width: size,
                                         height: size,
                                       );

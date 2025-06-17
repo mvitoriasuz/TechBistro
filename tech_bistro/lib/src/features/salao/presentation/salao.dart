@@ -23,37 +23,41 @@ class _SalaoPageState extends State<SalaoPage> {
   }
 
   Future<void> carregarMesas() async {
-  try {
-    final response = await Supabase.instance.client
-        .from('pedidos')
-        .select('id_mesa');
+    try {
+      final response = await Supabase.instance.client
+          .from('mesas')
+          .select('numero');
 
-    if (response != null && response is List) {
-      final ids = response
-          .map<int>((m) => m['id_mesa'] as int)
-          .toSet()
-          .toList()
-        ..sort();
+      if (response != null && response is List) {
+        final ids = response
+            .map<int>((m) => m['numero'] as int)
+            .toList()
+          ..sort();
 
+        setState(() {
+          mesas = ids;
+        });
+      }
+    } catch (e) {
+      print('Erro ao carregar mesas: $e');
+    } finally {
       setState(() {
-        mesas = ids;
+        isLoading = false;
       });
     }
-  } catch (e) {
-    print('Erro ao carregar mesas: $e');
-  } finally {
-    setState(() {
-      isLoading = false;
-    });
   }
-}
+
   Future<void> adicionarMesa() async {
     final novoNumero = mesas.isEmpty ? 1 : (mesas.reduce((a, b) => a > b ? a : b) + 1);
 
     try {
-      await Supabase.instance.client.from('mesas').insert({'numero': novoNumero});
+      await Supabase.instance.client
+          .from('mesas')
+          .insert({'numero': novoNumero});
+
       setState(() {
         mesas.add(novoNumero);
+        mesas.sort();
       });
     } catch (e) {
       print('Erro ao adicionar mesa: $e');
@@ -125,7 +129,6 @@ class _SalaoPageState extends State<SalaoPage> {
                     child: Text(
                       'Não há mesas abertas',
                       style: TextStyle(fontSize: 18),
-                      
                     ),
                   )
                 : GridView.builder(
@@ -160,19 +163,19 @@ class _SalaoPageState extends State<SalaoPage> {
                                 Text(
                                   'Mesa ${mesas[index]}',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 8),
                                 Flexible(
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
-                                      final size = constraints.maxWidth * 0.8;
+                                      final size = constraints.maxWidth * 0.6;
                                       return SvgPicture.asset(
                                         'assets/mesa.svg',
-                                        fit: BoxFit.cover,
+                                        fit: BoxFit.contain,
                                         width: size,
                                         height: size,
                                       );

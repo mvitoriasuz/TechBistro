@@ -162,26 +162,63 @@ class _MesaPageState extends State<MesaPage> {
                                             'Nenhum pedido feito ainda.',
                                           ),
                                         )
-                                        : ListView.builder(
-                                          itemCount: pedidos.length,
-                                          itemBuilder: (context, index) {
-                                            final pedido = pedidos[index];
-                                            final nomePrato =
-                                                pedido['pratos']?['nome_prato'] ??
-                                                'Prato';
-                                            final qtd =
-                                                pedido['qtd_pedido'] ?? 0;
-                                            final valorPrato =
-                                                pedido['pratos']?['valor_prato'] ??
-                                                0.0;
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 4.0,
+                                        : Builder(
+                                          builder: (context) {
+                                            final Map<String, dynamic>
+                                            pedidosAgrupados = {};
+                                            // Agrupar pedidos por nome do prato
+                                            for (var pedido in pedidos) {
+                                              final nomePrato =
+                                                  pedido['pratos']?['nome_prato'] ??
+                                                  'Prato';
+                                              final qtd =
+                                                  pedido['qtd_pedido'] ?? 0;
+                                              final valorPrato =
+                                                  pedido['pratos']?['valor_prato'] ??
+                                                  0.0;
+                                              final totalPedido =
+                                                  qtd * valorPrato;
+
+                                              if (pedidosAgrupados.containsKey(
+                                                nomePrato,
+                                              )) {
+                                                pedidosAgrupados[nomePrato]['qtd'] +=
+                                                    qtd;
+                                                pedidosAgrupados[nomePrato]['total'] +=
+                                                    totalPedido;
+                                              } else {
+                                                pedidosAgrupados[nomePrato] = {
+                                                  'qtd': qtd,
+                                                  'total': totalPedido,
+                                                };
+                                              }
+                                            }
+                                            final pedidosList =
+                                                pedidosAgrupados.entries
+                                                    .toList();
+
+                                            return ListView.builder(
+                                              itemCount: pedidosList.length,
+                                              itemBuilder: (context, index) {
+                                                final pedido =
+                                                    pedidosList[index];
+                                                return ListTile(
+                                                  title: Text(
+                                                    '${pedido.key} - ${pedido.value['qtd']}x',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontFamily: 'Nats',
+                                                    ),
                                                   ),
-                                              child: Text(
-                                                '$nomePrato x$qtd - R\$ ${(valorPrato * qtd).toStringAsFixed(2)}',
-                                              ),
+                                                  trailing: Text(
+                                                    'R\$ ${pedido.value['total'].toStringAsFixed(2)}',
+                                                    style: const TextStyle(
+                                                      fontSize: 20,
+                                                      fontFamily: 'Nats',
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             );
                                           },
                                         ),

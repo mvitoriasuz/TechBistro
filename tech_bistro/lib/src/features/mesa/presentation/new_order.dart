@@ -185,8 +185,8 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
-/// Função para capitalizar a primeira letra de uma string
-    String capitalize(String s) {
+  /// Função para capitalizar a primeira letra de uma string
+  String capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
   }
@@ -204,178 +204,198 @@ class _NewOrderState extends State<NewOrder> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-body: Padding(
-  padding: const EdgeInsets.all(16.0),
-  child: loading
-      ? const Center(child: CircularProgressIndicator())
-      : pratosPorCategoria.isEmpty
-          ? const Center(
-              child: Text(
-                'Nenhum prato encontrado.',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            )
-          : Column(
-              children: [
-                // CARD DE CABEÇALHO
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: appBarColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: Text(
-                          'PEDIDO MESA ${widget.idMesa}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontFamily: 'Nats',
-                          ),
-                        ),
-                      ),
-                    ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child:
+            loading
+                ? const Center(child: CircularProgressIndicator())
+                : pratosPorCategoria.isEmpty
+                ? const Center(
+                  child: Text(
+                    'Nenhum prato encontrado.',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                ),
-
-                // CARROSSEL DE CATEGORIAS
-                Expanded(
-                  child: Container(
-                    child: PageView.builder(
-                      itemCount: pratosPorCategoria.length,
-                      controller: PageController(viewportFraction: 0.9),
-                      itemBuilder: (context, index) {
-                        final categoria =
-                            pratosPorCategoria.keys.elementAt(index);
-                        final pratos = pratosPorCategoria[categoria]!;
-                        return Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                )
+                : Column(
+                  children: [
+                    // CARD DE CABEÇALHO
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: appBarColor,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 4,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  capitalize(categoria),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Nats',
-                                    color: Color(0xFF840011),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: pratos.length,
-                                    itemBuilder: (context, i) {
-                                      final prato = pratos[i];
-                                      final id = prato['id'];
-                                      final nome = prato['nome_prato'];
-                                      final valor = prato['valor_prato'];
-                                      final quantidade = quantidades[id] ?? 0;
-                                      return Card(
-                                        child: ListTile(
-                                          title: Text(nome),
-                                          subtitle: Text(
-                                            'R\$ ${valor.toStringAsFixed(2)}',
-                                          ),
-                                          trailing: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              color: Colors.white,
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.remove,
-                                                    color: appBarColor,
-                                                  ),
-                                                  onPressed: () => setState(() {
-                                                    if (quantidade > 0) {
-                                                      quantidades[id] =
-                                                          quantidade - 1;
-                                                    }
-                                                  }),
-                                                ),
-                                                Container(
-                                                  width: 40,
-                                                  alignment: Alignment.center,
-                                                  child: Text(
-                                                    '$quantidade',
-                                                    style: const TextStyle(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.add,
-                                                    color: appBarColor,
-                                                  ),
-                                                  onPressed: () => setState(() {
-                                                    quantidades[id] =
-                                                        quantidade + 1;
-                                                  }),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: Text(
+                              'PEDIDO MESA ${widget.idMesa}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'Nats',
+                              ),
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                // BOTÃO CONFIRMAR
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                      ),
-                      onPressed: _confirmarPedido,
-                      child: const Text(
-                        'Finalizar pedido',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontFamily: 'Nats',
                         ),
                       ),
                     ),
-                  ),
+
+                    // CARROSSEL DE CATEGORIAS
+                    Expanded(
+                      child: Container(
+                        child: PageView.builder(
+                          itemCount: pratosPorCategoria.length,
+                          controller: PageController(viewportFraction: 0.9),
+                          itemBuilder: (context, index) {
+                            final categoria = pratosPorCategoria.keys.elementAt(
+                              index,
+                            );
+                            final pratos = pratosPorCategoria[categoria]!;
+                            return Card(
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      capitalize(categoria),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                        fontFamily: 'Nats',
+                                        color: Color(0xFF840011),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: pratos.length,
+                                        itemBuilder: (context, i) {
+                                          final prato = pratos[i];
+                                          final id = prato['id'];
+                                          final nome = prato['nome_prato'];
+                                          final valor = prato['valor_prato'];
+                                          final quantidade =
+                                              quantidades[id] ?? 0;
+
+                                          return ListTile(
+                                            title: Text(
+                                              nome,
+                                              style: const TextStyle(
+                                                fontFamily: 'Nats',
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              'R\$ ${valor.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Nats',
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            trailing: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                color: Colors.grey.shade100,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.remove,
+                                                      color: Color(0xFF840011),
+                                                    ),
+                                                    onPressed:
+                                                        () => setState(() {
+                                                          if (quantidade > 0) {
+                                                            quantidades[id] =
+                                                                quantidade - 1;
+                                                          }
+                                                        }),
+                                                  ),
+                                                  Container(
+                                                    width: 30,
+                                                    alignment: Alignment.center,
+                                                    child: Text(
+                                                      '$quantidade',
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontFamily: 'Nats',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.add,
+                                                      color: Color(0xFF840011),
+                                                    ),
+                                                    onPressed:
+                                                        () => setState(() {
+                                                          quantidades[id] =
+                                                              quantidade + 1;
+                                                        }),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // BOTÃO CONFIRMAR
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                          ),
+                          onPressed: _confirmarPedido,
+                          child: const Text(
+                            'Finalizar pedido',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontFamily: 'Nats',
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-),
+      ),
     );
   }
 }

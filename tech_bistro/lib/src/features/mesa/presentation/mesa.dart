@@ -204,7 +204,7 @@ class _MesaPageState extends State<MesaPage> {
                                                     pedidosList[index];
                                                 return ListTile(
                                                   title: Text(
-                                                    '${pedido.key} - ${pedido.value['qtd']}x',
+                                                    '${pedido.value['qtd']}x - ${pedido.key}',
                                                     style: const TextStyle(
                                                       fontSize: 16,
                                                       fontFamily: 'Nats',

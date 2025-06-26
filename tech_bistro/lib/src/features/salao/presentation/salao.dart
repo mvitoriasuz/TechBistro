@@ -70,7 +70,7 @@ class _SalaoPageState extends State<SalaoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tech Bistro', style: TextStyle(color: Colors.white)),
+        title: const Text('TECHBISTRO', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
         backgroundColor: appBarColor,
         leading: Builder(
           builder: (context) => IconButton(

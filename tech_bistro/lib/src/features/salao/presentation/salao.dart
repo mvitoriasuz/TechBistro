@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:techbistro/settings.dart';
 import 'package:techbistro/src/ui/theme/app_colors.dart';
 import '../../mesa/presentation/mesa.dart';
 import '../../cozinha/presentation/cozinha.dart';
@@ -29,10 +30,8 @@ class _SalaoPageState extends State<SalaoPage> {
           .select('numero');
 
       if (response != null && response is List) {
-        final ids = response
-            .map<int>((m) => m['numero'] as int)
-            .toList()
-          ..sort();
+        final ids =
+            response.map<int>((m) => m['numero'] as int).toList()..sort();
 
         setState(() {
           mesas = ids;
@@ -48,12 +47,13 @@ class _SalaoPageState extends State<SalaoPage> {
   }
 
   Future<void> adicionarMesa() async {
-    final novoNumero = mesas.isEmpty ? 1 : (mesas.reduce((a, b) => a > b ? a : b) + 1);
+    final novoNumero =
+        mesas.isEmpty ? 1 : (mesas.reduce((a, b) => a > b ? a : b) + 1);
 
     try {
-      await Supabase.instance.client
-          .from('mesas')
-          .insert({'numero': novoNumero});
+      await Supabase.instance.client.from('mesas').insert({
+        'numero': novoNumero,
+      });
 
       setState(() {
         mesas.add(novoNumero);
@@ -70,18 +70,27 @@ class _SalaoPageState extends State<SalaoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TECHBISTRO', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
+        title: const Text(
+          'TECHBISTRO',
+          style: TextStyle(color: Colors.white, fontFamily: 'Nats'),
+        ),
         backgroundColor: appBarColor,
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
           ),
         ],
       ),
@@ -122,73 +131,76 @@ class _SalaoPageState extends State<SalaoPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : mesas.isEmpty
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : mesas.isEmpty
                 ? const Center(
-                    child: Text(
-                      'Não há mesas abertas',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  )
+                  child: Text(
+                    'Não há mesas abertas',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                )
                 : GridView.builder(
-                    itemCount: mesas.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      return Card(
-                        color: appBarColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MesaPage(numeroMesa: mesas[index]),
-                              ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Mesa ${mesas[index]}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Flexible(
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final size = constraints.maxWidth * 0.6;
-                                      return SvgPicture.asset(
-                                        'assets/mesa.svg',
-                                        fit: BoxFit.contain,
-                                        width: size,
-                                        height: size,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                  itemCount: mesas.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    return Card(
+                      color: appBarColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      MesaPage(numeroMesa: mesas[index]),
                             ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Mesa ${mesas[index]}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Flexible(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final size = constraints.maxWidth * 0.6;
+                                    return SvgPicture.asset(
+                                      'assets/mesa.svg',
+                                      fit: BoxFit.contain,
+                                      width: size,
+                                      height: size,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
+                ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: adicionarMesa,

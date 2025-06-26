@@ -186,7 +186,7 @@ class _CozinhaPageState extends State<CozinhaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cozinha'),
+        title: const Text('Cozinha', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
         backgroundColor: const Color(0xFF840011),
       ),
       body: carregando

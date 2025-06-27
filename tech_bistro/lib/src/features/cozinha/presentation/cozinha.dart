@@ -188,6 +188,11 @@ class _CozinhaPageState extends State<CozinhaPage> {
       appBar: AppBar(
         title: const Text('Cozinha', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
         backgroundColor: const Color(0xFF840011),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          color: Colors.white,
+        ),
       ),
       body: carregando
           ? const Center(child: CircularProgressIndicator())

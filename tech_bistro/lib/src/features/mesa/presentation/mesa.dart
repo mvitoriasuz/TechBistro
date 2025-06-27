@@ -63,7 +63,13 @@ class _MesaPageState extends State<MesaPage> {
     const Color appBarColor = Color(0xFF840011);
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: appBarColor),
+      appBar: AppBar(backgroundColor: appBarColor,
+          leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          color: Colors.white,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child:

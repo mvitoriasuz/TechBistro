@@ -21,17 +21,20 @@ class _SalaoPageState extends State<SalaoPage> {
   bool isLoading = true;
   int _readyOrdersCount = 0;
   Timer? _notificationTimer;
+  StreamSubscription? _mesasSubscription;
 
   @override
   void initState() {
     super.initState();
     carregarMesas();
     _startNotificationListener();
+    _startMesasRealtimeListener();
   }
 
   @override
   void dispose() {
     _notificationTimer?.cancel();
+    _mesasSubscription?.cancel();
     super.dispose();
   }
 
@@ -42,10 +45,22 @@ class _SalaoPageState extends State<SalaoPage> {
         final ids = response.map<int>((m) => m['numero'] as int).toList()..sort();
         setState(() => mesas = ids);
       }
-    } catch (_) {
+    } catch (e) { // Corrigido aqui: `_` foi substituído por `e`
+      print('Erro ao carregar mesas: $e');
     } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  void _startMesasRealtimeListener() {
+    _mesasSubscription = Supabase.instance.client
+        .from('mesas')
+        .stream(primaryKey: ['numero'])
+        .listen((List<Map<String, dynamic>> data) {
+      carregarMesas();
+    }, onError: (error) {
+      print('Erro no listener de tempo real das mesas: $error');
+    });
   }
 
   Future<void> _fetchReadyOrdersCount() async {
@@ -67,7 +82,7 @@ class _SalaoPageState extends State<SalaoPage> {
 
   void _startNotificationListener() {
     _fetchReadyOrdersCount();
-    _notificationTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    _notificationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _fetchReadyOrdersCount();
     });
   }
@@ -114,10 +129,7 @@ class _SalaoPageState extends State<SalaoPage> {
 
                 try {
                   await Supabase.instance.client.from('mesas').insert({'numero': numero});
-                  setState(() {
-                    mesas.add(numero);
-                    mesas.sort();
-                  });
+                  await carregarMesas(); // Mantido para garantir atualização imediata após adicionar
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -327,13 +339,14 @@ class _SalaoPageState extends State<SalaoPage> {
                         child: Stack(
                           children: [
                             InkWell(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => MesaPage(numeroMesa: mesas[index]),
                                   ),
                                 );
+                                carregarMesas();
                               },
                               borderRadius: BorderRadius.circular(12),
                               child: Padding(
@@ -379,7 +392,7 @@ class _SalaoPageState extends State<SalaoPage> {
                                     value: 'alergias',
                                     child: Row(
                                       children: const [
-                                        Icon(Icons.warning_rounded, color: Colors.orange), 
+                                        Icon(Icons.warning_rounded, color: Colors.orange),
                                         SizedBox(width: 8),
                                         Text('Ver alergias'),
                                       ],

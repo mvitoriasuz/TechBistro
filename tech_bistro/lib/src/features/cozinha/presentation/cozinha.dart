@@ -23,7 +23,7 @@ class _CozinhaPageState extends State<CozinhaPage> {
   void initState() {
     super.initState();
     _carregarPedidos();
-    timer = Timer.periodic(const Duration(seconds: 20), (_) {
+    timer = Timer.periodic(const Duration(seconds: 5), (_) {
       _carregarPedidos();
     });
   }

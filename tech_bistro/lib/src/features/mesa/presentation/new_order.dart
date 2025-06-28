@@ -57,6 +57,8 @@ class _NewOrderState extends State<NewOrder> {
     int idMesa,
   ) async {
     try {
+      final agora = DateTime.now();
+
       for (var item in pedido) {
         await supabase.from('pedidos').insert({
           'id_prato': item['id'],
@@ -65,6 +67,12 @@ class _NewOrderState extends State<NewOrder> {
           'alergia_pedido': alergia,
           'status_pedido': 'pendente',
           'id_mesa': idMesa,
+          'data_pedido':
+              agora.toIso8601String().split('T')[0], // só a data: yyyy-MM-dd
+          'horario_pedido':
+              agora.toIso8601String().split(
+                'T',
+              )[1], // só a hora: HH:mm:ss.ssssssZ
         });
       }
       _mostrarSnackBar('Pedido enviado com sucesso!');

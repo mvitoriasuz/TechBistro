@@ -17,6 +17,7 @@ class _MesaPageState extends State<MesaPage> {
 
   bool loading = true;
   double totalPedido = 0.0;
+  double totalPago = 0.0;
   List<dynamic> pedidos = [];
 
   @override
@@ -38,16 +39,24 @@ class _MesaPageState extends State<MesaPage> {
       double soma = 0.0;
       for (var pedido in response) {
         final qtd = pedido['qtd_pedido'] ?? 0;
-        final valorPrato =
-            pedido['pratos'] != null
-                ? (pedido['pratos']['valor_prato'] ?? 0.0)
-                : 0.0;
+        final valorPrato = pedido['pratos']?['valor_prato'] ?? 0.0;
         soma += (qtd * valorPrato);
+      }
+
+      final pagamentosResponse = await supabase
+          .from('pagamento')
+          .select('valor_pagamento')
+          .eq('id_mesa', widget.numeroMesa);
+
+      double somaPagamentos = 0.0;
+      for (var pagamento in pagamentosResponse) {
+        somaPagamentos += (pagamento['valor_pagamento'] ?? 0.0) as double;
       }
 
       setState(() {
         pedidos = response;
         totalPedido = soma;
+        totalPago = somaPagamentos;
         loading = false;
       });
     } catch (e) {
@@ -63,8 +72,9 @@ class _MesaPageState extends State<MesaPage> {
     const Color appBarColor = Color(0xFF840011);
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: appBarColor,
-          leading: IconButton(
+      appBar: AppBar(
+        backgroundColor: appBarColor,
+        leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
           color: Colors.white,
@@ -112,7 +122,7 @@ class _MesaPageState extends State<MesaPage> {
                                 ),
                               ),
                               Text(
-                                'VALOR PARCIAL: R\$ ${totalPedido.toStringAsFixed(2)}',
+                                'PAGAMENTO PARCIAL: R\$ ${totalPago.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontFamily: 'Nats',
@@ -120,7 +130,7 @@ class _MesaPageState extends State<MesaPage> {
                                 ),
                               ),
                               Text(
-                                'VALOR A PAGAR: R\$ ${totalPedido.toStringAsFixed(2)}',
+                                'VALOR A PAGAR: R\$ ${(totalPedido - totalPago).toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontFamily: 'Nats',
@@ -333,6 +343,8 @@ class _MesaPageState extends State<MesaPage> {
                                                   backgroundColor: Colors.green,
                                                 ),
                                               );
+
+                                              await fetchPedidos();
                                             } catch (e) {
                                               ScaffoldMessenger.of(
                                                 context,

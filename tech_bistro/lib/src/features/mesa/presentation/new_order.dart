@@ -68,11 +68,11 @@ class _NewOrderState extends State<NewOrder> {
           'status_pedido': 'pendente',
           'id_mesa': idMesa,
           'data_pedido':
-              agora.toIso8601String().split('T')[0], // só a data: yyyy-MM-dd
+              agora.toIso8601String().split('T')[0],
           'horario_pedido':
               agora.toIso8601String().split(
                 'T',
-              )[1], // só a hora: HH:mm:ss.ssssssZ
+              )[1],
         });
       }
       _mostrarSnackBar('Pedido enviado com sucesso!');
@@ -193,7 +193,6 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
-  /// Função para capitalizar a primeira letra de uma string
   String capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);

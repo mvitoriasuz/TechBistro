@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../cozinha/presentation/historico_entregues.dart';
 
 class CozinhaPage extends StatefulWidget {
   const CozinhaPage({super.key});
@@ -35,24 +36,44 @@ class _CozinhaPageState extends State<CozinhaPage> {
 
   Future<void> _carregarPedidos() async {
     setState(() => carregando = true);
-    final response = await supabase
-        .from('pedidos')
-        .select('*, pratos(*)');
+    try {
+      final response = await supabase
+          .from('pedidos')
+          .select('*, pratos(*), observacao_pedido, alergia_pedido, horario_finalizacao');
 
-    setState(() {
-      pedidosPendentes = response.where((p) => p['status_pedido'] == 'pendente').toList();
-      pedidosEmPreparo = response.where((p) => p['status_pedido'] == 'em_preparo').toList();
-      pedidosProntos = response.where((p) => p['status_pedido'] == 'pronto').toList();
-      carregando = false;
-    });
+      setState(() {
+        pedidosPendentes = response.where((p) => p['status_pedido'] == 'pendente').toList();
+        pedidosEmPreparo = response.where((p) => p['status_pedido'] == 'em_preparo').toList();
+        pedidosProntos = response.where((p) => p['status_pedido'] == 'pronto').toList();
+        carregando = false;
+      });
+    } catch (e) {
+      setState(() => carregando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar pedidos: $e')),
+      );
+    }
   }
 
   Future<void> _atualizarStatusPedido(int idPedido, String novoStatus) async {
-    await supabase
-        .from('pedidos')
-        .update({'status_pedido': novoStatus})
-        .eq('id', idPedido);
-    _carregarPedidos();
+    try {
+      Map<String, dynamic> updatePayload = {'status_pedido': novoStatus};
+      if (novoStatus == 'pronto') {
+        final now = DateTime.now();
+        final timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+        updatePayload['horario_finalizacao'] = timeString;
+      }
+
+      await supabase
+          .from('pedidos')
+          .update(updatePayload)
+          .eq('id', idPedido);
+      _carregarPedidos();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao atualizar pedido: $e')),
+      );
+    }
   }
 
   Widget _buildKanbanColumn(String title, Color color, List<dynamic> pedidos, String statusAtual) {
@@ -77,6 +98,32 @@ class _CozinhaPageState extends State<CozinhaPage> {
                     itemBuilder: (context, index) {
                       final pedido = pedidos[index];
                       final prato = pedido['pratos'] ?? {};
+                      final observacao = pedido['observacao_pedido'] as String?;
+                      final alergia = pedido['alergia_pedido'] as String?;
+                      final horarioFinalizacao = pedido['horario_finalizacao'] as String?;
+
+                      Widget trailingWidget;
+                      if (statusAtual == 'pronto' && horarioFinalizacao != null && horarioFinalizacao.isNotEmpty) {
+                        trailingWidget = Text(
+                          horarioFinalizacao,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+                        );
+                      } else if (statusAtual == 'pendente') {
+                        trailingWidget = IconButton(
+                          icon: const Icon(Icons.kitchen, color: Colors.blue, size: 36.0),
+                          tooltip: 'Mover para Em preparo',
+                          onPressed: () => _atualizarStatusPedido(pedido['id'], 'em_preparo'),
+                        );
+                      } else if (statusAtual == 'em_preparo') {
+                        trailingWidget = IconButton(
+                          icon: const Icon(Icons.bakery_dining_rounded, color: Colors.green, size: 36.0),
+                          tooltip: 'Mover para Pronto',
+                          onPressed: () => _atualizarStatusPedido(pedido['id'], 'pronto'),
+                        );
+                      } else {
+                        trailingWidget = const SizedBox.shrink();
+                      }
+
                       return Card(
                         elevation: 3,
                         shape: RoundedRectangleBorder(
@@ -86,25 +133,17 @@ class _CozinhaPageState extends State<CozinhaPage> {
                           leading: const Icon(Icons.fastfood_rounded, color: Colors.red),
                           title: Text(prato['nome_prato'] ?? 'Prato',
                               style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                              'Qtd: ${pedido['qtd_pedido']}  •  Mesa: ${pedido['id_mesa']}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (statusAtual == 'pendente')
-                                IconButton(
-                                  icon: const Icon(Icons.kitchen, color: Colors.blue),
-                                  tooltip: 'Mover para Em preparo',
-                                  onPressed: () => _atualizarStatusPedido(pedido['id'], 'em_preparo'),
-                                ),
-                              if (statusAtual == 'em_preparo')
-                                IconButton(
-                                  icon: const Icon(Icons.check_circle, color: Colors.green),
-                                  tooltip: 'Mover para Pronto',
-                                  onPressed: () => _atualizarStatusPedido(pedido['id'], 'pronto'),
-                                ),
+                              Text('Qtd: ${pedido['qtd_pedido']}  •  Mesa: ${pedido['id_mesa']}'),
+                              if (observacao != null && observacao.isNotEmpty)
+                                Text('Obs: $observacao', style: const TextStyle(fontStyle: FontStyle.italic)),
+                              if (alergia != null && alergia.isNotEmpty)
+                                Text('Alergia: $alergia', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                             ],
                           ),
+                          trailing: trailingWidget,
                         ),
                       );
                     },
@@ -193,6 +232,17 @@ class _CozinhaPageState extends State<CozinhaPage> {
           onPressed: () => Navigator.of(context).pop(),
           color: Colors.white,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HistoricoEntregaPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: carregando
           ? const Center(child: CircularProgressIndicator())

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:techbistro/settings.dart';
 import '../../mesa/presentation/mesa.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../cozinha/presentation/cozinha.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/ui/theme/app_colors.dart';
+import 'pedidos_prontos.dart';
+import '../../administracao/presentation/users.dart';
 
 class SalaoPage extends StatefulWidget {
   const SalaoPage({super.key});
@@ -16,23 +19,57 @@ class SalaoPage extends StatefulWidget {
 class _SalaoPageState extends State<SalaoPage> {
   List<int> mesas = [];
   bool isLoading = true;
+  int _readyOrdersCount = 0;
+  Timer? _notificationTimer;
 
   @override
   void initState() {
     super.initState();
     carregarMesas();
+    _startNotificationListener();
+  }
+
+  @override
+  void dispose() {
+    _notificationTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> carregarMesas() async {
     try {
       final response = await Supabase.instance.client.from('mesas').select('numero');
-      if (response != null && response is List) {
+      if (response is List) {
         final ids = response.map<int>((m) => m['numero'] as int).toList()..sort();
         setState(() => mesas = ids);
       }
-    } catch (_) {} finally {
+    } catch (_) {
+    } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  Future<void> _fetchReadyOrdersCount() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('pedidos')
+          .select('id')
+          .eq('status_pedido', 'pronto');
+
+      if (response is List) {
+        setState(() {
+          _readyOrdersCount = response.length;
+        });
+      }
+    } catch (e) {
+      print('Erro ao buscar contagem de pedidos prontos: $e');
+    }
+  }
+
+  void _startNotificationListener() {
+    _fetchReadyOrdersCount();
+    _notificationTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _fetchReadyOrdersCount();
+    });
   }
 
   Future<void> adicionarMesa() async {
@@ -96,48 +133,48 @@ class _SalaoPageState extends State<SalaoPage> {
     );
   }
 
-Future<void> mostrarAlergiasMesa(int numeroMesa) async {
-  final supabase = Supabase.instance.client;
+  Future<void> mostrarAlergiasMesa(int numeroMesa) async {
+    final supabase = Supabase.instance.client;
 
-  try {
-    final pedidos = await supabase
-        .from('pedidos')
-        .select('alergia_pedido')
-        .eq('id_mesa', numeroMesa);
+    try {
+      final response = await supabase
+          .from('pedidos')
+          .select('alergia_pedido')
+          .eq('id_mesa', numeroMesa);
 
-    final alergias = pedidos
-        .map<String?>((p) => p['alergia_pedido']?.toString())
-        .where((a) => a != null && a!.isNotEmpty)
-        .toSet();
+      final alergias = response
+          .map<String?>((p) => p['alergia_pedido']?.toString())
+          .where((a) => a != null && a!.isNotEmpty)
+          .toSet();
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Alergias da Mesa $numeroMesa'),
-        content: alergias.isEmpty
-            ? const Text('Nenhuma alergia registrada.')
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: alergias.map<Widget>((e) => Text('- $e')).toList(),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro ao buscar alergias: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Alergias da Mesa $numeroMesa'),
+          content: alergias.isEmpty
+              ? const Text('Nenhuma alergia registrada.')
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: alergias.map<Widget>((e) => Text('- $e')).toList(),
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao buscar alergias: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-}
 
   Future<void> _confirmarExclusaoMesa(BuildContext context, int numeroMesa) async {
     final supabase = Supabase.instance.client;
@@ -223,7 +260,7 @@ Future<void> mostrarAlergiasMesa(int numeroMesa) async {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TECHBISTRO', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
+        title: const Text('TECHBISTRO', style: TextStyle(color: Colors.white)),
         backgroundColor: appBarColor,
         leading: Builder(
           builder: (context) => IconButton(
@@ -338,8 +375,26 @@ Future<void> mostrarAlergiasMesa(int numeroMesa) async {
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem(value: 'alergias', child: Text('Ver alergias')),
-                                  const PopupMenuItem(value: 'excluir', child: Text('Excluir mesa')),
+                                  PopupMenuItem<String>(
+                                    value: 'alergias',
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.warning_rounded, color: Colors.orange), 
+                                        SizedBox(width: 8),
+                                        Text('Ver alergias'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem<String>(
+                                    value: 'excluir',
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Excluir mesa'),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -349,11 +404,72 @@ Future<void> mostrarAlergiasMesa(int numeroMesa) async {
                     },
                   ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: adicionarMesa,
-        backgroundColor: AppColors.secondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          FloatingActionButton(
+            heroTag: 'user_btn',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UsersPage()),
+              );
+            },
+            backgroundColor: AppColors.secondary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            child: const Icon(Icons.person, color: Colors.white),
+          ),
+          FloatingActionButton(
+            heroTag: 'add_mesa_btn',
+            onPressed: adicionarMesa,
+            backgroundColor: AppColors.secondary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+          Stack(
+            children: [
+              FloatingActionButton(
+                heroTag: 'notifications_btn',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PedidosProntosPage()),
+                  );
+                },
+                backgroundColor: AppColors.secondary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                child: const Icon(Icons.notifications_active, color: Colors.white),
+              ),
+              if (_readyOrdersCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade900,
+                      borderRadius: BorderRadius.circular(999.0),
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
+                    child: Text(
+                      '$_readyOrdersCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

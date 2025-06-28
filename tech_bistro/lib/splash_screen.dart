@@ -17,7 +17,6 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         MaterialPageRoute(builder: (context) => const SalaoPage()),
       );
-      ;
     });
   }
 

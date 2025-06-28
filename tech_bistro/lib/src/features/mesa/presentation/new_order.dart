@@ -5,7 +5,7 @@ import 'package:techbistro/src/ui/theme/app_colors.dart';
 class NewOrder extends StatefulWidget {
   final int idMesa;
 
-  const NewOrder({Key? key, required this.idMesa}) : super(key: key);
+  const NewOrder({super.key, required this.idMesa});
 
   @override
   State<NewOrder> createState() => _NewOrderState();

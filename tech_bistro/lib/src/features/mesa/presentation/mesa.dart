@@ -6,7 +6,7 @@ import 'new_order.dart';
 class MesaPage extends StatefulWidget {
   final int numeroMesa;
 
-  const MesaPage({Key? key, required this.numeroMesa}) : super(key: key);
+  const MesaPage({super.key, required this.numeroMesa});
 
   @override
   State<MesaPage> createState() => _MesaPageState();
@@ -320,7 +320,7 @@ class _MesaPageState extends State<MesaPage> {
                                                   .insert({
                                                     'id_mesa':
                                                         widget.numeroMesa,
-                                                    'valor_total': valor,
+                                                    'valor_pagamento': valor,
                                                   });
 
                                               ScaffoldMessenger.of(

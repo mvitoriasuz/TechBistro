@@ -26,8 +26,8 @@ class _NewOrderState extends State<NewOrder> {
   Future<void> fetchPratos() async {
     try {
       final response = await supabase.from('pratos').select();
-
       Map<String, List<dynamic>> agrupados = {};
+
       for (var prato in response) {
         final categoria = prato['categoria_prato'] ?? 'Outros';
         agrupados.putIfAbsent(categoria, () => []).add(prato);
@@ -45,9 +45,7 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   void _mostrarSnackBar(String mensagem) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensagem)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   Future<void> _enviarPedido(
@@ -58,7 +56,6 @@ class _NewOrderState extends State<NewOrder> {
   ) async {
     try {
       final agora = DateTime.now();
-
       for (var item in pedido) {
         await supabase.from('pedidos').insert({
           'id_prato': item['id'],
@@ -67,12 +64,8 @@ class _NewOrderState extends State<NewOrder> {
           'alergia_pedido': alergia,
           'status_pedido': 'pendente',
           'id_mesa': idMesa,
-          'data_pedido':
-              agora.toIso8601String().split('T')[0],
-          'horario_pedido':
-              agora.toIso8601String().split(
-                'T',
-              )[1],
+          'data_pedido': agora.toIso8601String().split('T')[0],
+          'horario_pedido': agora.toIso8601String().split('T')[1],
         });
       }
       _mostrarSnackBar('Pedido enviado com sucesso!');
@@ -83,18 +76,19 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   void _confirmarPedido() {
-    final pedidoFinal =
-        quantidades.entries.where((entry) => entry.value > 0).map((entry) {
-          final prato = pratosPorCategoria.values
-              .expand((x) => x)
-              .firstWhere((p) => p['id'] == entry.key);
-          return {
-            'id': prato['id'],
-            'nome': prato['nome_prato'],
-            'quantidade': entry.value,
-            'valor_unitario': prato['valor_prato'],
-          };
-        }).toList();
+    final pedidoFinal = quantidades.entries
+        .where((entry) => entry.value > 0)
+        .map((entry) {
+      final prato = pratosPorCategoria.values
+          .expand((x) => x)
+          .firstWhere((p) => p['id'] == entry.key);
+      return {
+        'id': prato['id'],
+        'nome': prato['nome_prato'],
+        'quantidade': entry.value,
+        'valor_unitario': prato['valor_prato'],
+      };
+    }).toList();
 
     if (pedidoFinal.isEmpty) {
       _mostrarSnackBar('Adicione ao menos 1 item ao pedido.');
@@ -125,15 +119,11 @@ class _NewOrderState extends State<NewOrder> {
                       spacing: 10,
                       children: [
                         ElevatedButton(
-                          onPressed:
-                              () => setState(
-                                () => mostrarAlergico = !mostrarAlergico,
-                              ),
+                          onPressed: () => setState(() => mostrarAlergico = !mostrarAlergico),
                           child: const Text('ALÉRGICOS'),
                         ),
                         ElevatedButton(
-                          onPressed:
-                              () => setState(() => mostrarObs = !mostrarObs),
+                          onPressed: () => setState(() => mostrarObs = !mostrarObs),
                           child: const Text('OBSERVAÇÕES'),
                         ),
                       ],
@@ -213,195 +203,31 @@ class _NewOrderState extends State<NewOrder> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child:
-            loading
-                ? const Center(child: CircularProgressIndicator())
-                : (pratosPorCategoria.isEmpty
-                    ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(12),
-                              ),
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF840011),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(12),
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Center(
-                                child: Text(
-                                  'PEDIDO MESA ${widget.idMesa}',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontFamily: 'Nats',
-                                  ),
-                                ),
-                              ),
-                            ),
+        child: loading
+            ? const Center(child: CircularProgressIndicator())
+            : pratosPorCategoria.isEmpty
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Nenhum pedido realizado.',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                      ],
-                    )
-                    : Column(
-                      children: [
-                        Expanded(
-                          child: PageView.builder(
-                            itemCount: pratosPorCategoria.length,
-                            controller: PageController(viewportFraction: 0.95),
-                            itemBuilder: (context, index) {
-                              final categoria = pratosPorCategoria.keys
-                                  .elementAt(index);
-                              final pratos = pratosPorCategoria[categoria]!;
-                              return Card(
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        capitalize(categoria),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 17,
-                                          fontFamily: 'Nats',
-                                          color: Color(0xFF840011),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Expanded(
-                                        child: ListView.builder(
-                                          itemCount: pratos.length,
-                                          itemBuilder: (context, i) {
-                                            final prato = pratos[i];
-                                            final id = prato['id'];
-                                            final nome = prato['nome_prato'];
-                                            final valor = prato['valor_prato'];
-                                            final quantidade =
-                                                quantidades[id] ?? 0;
-
-                                            return ListTile(
-                                              title: Text(
-                                                nome,
-                                                style: const TextStyle(
-                                                  fontFamily: 'Nats',
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                              subtitle: Text(
-                                                'R\$ ${valor.toStringAsFixed(2)}',
-                                                style: const TextStyle(
-                                                  fontFamily: 'Nats',
-                                                  fontSize: 14,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              trailing: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  color: Colors.grey.shade100,
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                        Icons.remove,
-                                                        color: Color(
-                                                          0xFF840011,
-                                                        ),
-                                                      ),
-                                                      onPressed:
-                                                          () => setState(() {
-                                                            if (quantidade >
-                                                                0) {
-                                                              quantidades[id] =
-                                                                  quantidade -
-                                                                  1;
-                                                            }
-                                                          }),
-                                                    ),
-                                                    Container(
-                                                      width: 30,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: Text(
-                                                        '$quantidade',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontFamily: 'Nats',
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                        Icons.add,
-                                                        color: Color(
-                                                          0xFF840011,
-                                                        ),
-                                                      ),
-                                                      onPressed:
-                                                          () => setState(() {
-                                                            quantidades[id] =
-                                                                quantidade + 1;
-                                                          }),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                              ),
-                              onPressed: _confirmarPedido,
-                              child: const Text(
-                                'Finalizar pedido',
-                                style: TextStyle(
-                                  fontSize: 18,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: appBarColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Text(
+                                'PEDIDO MESA ${widget.idMesa}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   fontFamily: 'Nats',
                                 ),
@@ -409,8 +235,139 @@ class _NewOrderState extends State<NewOrder> {
                             ),
                           ),
                         ),
-                      ],
-                    )),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Nenhum pedido realizado.',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: PageView.builder(
+                          itemCount: pratosPorCategoria.length,
+                          controller: PageController(viewportFraction: 0.95),
+                          itemBuilder: (context, index) {
+                            final categoria = pratosPorCategoria.keys.elementAt(index);
+                            final pratos = pratosPorCategoria[categoria]!;
+
+                            return Card(
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      capitalize(categoria),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                        fontFamily: 'Nats',
+                                        color: Color(0xFF840011),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: pratos.length,
+                                        itemBuilder: (context, i) {
+                                          final prato = pratos[i];
+                                          final id = prato['id'];
+                                          final nome = prato['nome_prato'];
+                                          final valor = prato['valor_prato'];
+                                          final quantidade = quantidades[id] ?? 0;
+
+                                          return ListTile(
+                                            title: Text(
+                                              nome,
+                                              style: const TextStyle(
+                                                fontFamily: 'Nats',
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              'R\$ ${valor.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Nats',
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            trailing: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(20),
+                                                color: Colors.grey.shade100,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(Icons.remove, color: Color(0xFF840011)),
+                                                    onPressed: () => setState(() {
+                                                      if (quantidade > 0) {
+                                                        quantidades[id] = quantidade - 1;
+                                                      }
+                                                    }),
+                                                  ),
+                                                  Container(
+                                                    width: 30,
+                                                    alignment: Alignment.center,
+                                                    child: Text(
+                                                      '$quantidade',
+                                                      style: const TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontFamily: 'Nats',
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.add, color: Color(0xFF840011)),
+                                                    onPressed: () => setState(() {
+                                                      quantidades[id] = quantidade + 1;
+                                                    }),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.secondary,
+                          ),
+                          onPressed: _confirmarPedido,
+                          child: const Text(
+                            'Finalizar pedido',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
       ),
     );
   }

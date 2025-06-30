@@ -39,7 +39,7 @@ class _MesaPageState extends State<MesaPage> {
       double soma = 0.0;
       for (var pedido in response) {
         final qtd = pedido['qtd_pedido'] ?? 0;
-        final valorPrato = pedido['pratos']?['valor_prato'] ?? 0.0;
+        final valorPrato = (pedido['pratos']?['valor_prato'] as num? ?? 0.0).toDouble();
         soma += (qtd * valorPrato);
       }
 
@@ -50,7 +50,7 @@ class _MesaPageState extends State<MesaPage> {
 
       double somaPagamentos = 0.0;
       for (var pagamento in pagamentosResponse) {
-        somaPagamentos += (pagamento['valor_pagamento'] ?? 0.0) as double;
+        somaPagamentos += (pagamento['valor_pagamento'] as num? ?? 0.0).toDouble();
       }
 
       setState(() {
@@ -65,7 +65,9 @@ class _MesaPageState extends State<MesaPage> {
       }
     } catch (e) {
       setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao carregar pedidos: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao carregar pedidos: $e')));
     }
   }
 
@@ -267,16 +269,25 @@ class _MesaPageState extends State<MesaPage> {
                                     )
                                   : Builder(
                                       builder: (context) {
-                                        final Map<String, dynamic> pedidosAgrupados = {};
+                                        final Map<String, dynamic>
+                                            pedidosAgrupados = {};
                                         for (var pedido in pedidos) {
-                                          final nomePrato = pedido['pratos']?['nome_prato'] ?? 'Prato';
-                                          final qtd = pedido['qtd_pedido'] ?? 0;
-                                          final valorPrato = pedido['pratos']?['valor_prato'] ?? 0.0;
-                                          final totalPedidoItem = qtd * valorPrato;
+                                          final nomePrato =
+                                              pedido['pratos']?['nome_prato'] ??
+                                                  'Prato';
+                                          final qtd =
+                                              pedido['qtd_pedido'] ?? 0;
+                                          final valorPrato =
+                                              (pedido['pratos']?['valor_prato'] as num? ?? 0.0).toDouble();
+                                          final totalPedidoItem =
+                                              qtd * valorPrato;
 
-                                          if (pedidosAgrupados.containsKey(nomePrato)) {
-                                            pedidosAgrupados[nomePrato]['qtd'] += qtd;
-                                            pedidosAgrupados[nomePrato]['total'] += totalPedidoItem;
+                                          if (pedidosAgrupados.containsKey(
+                                              nomePrato)) {
+                                            pedidosAgrupados[nomePrato]['qtd'] +=
+                                                qtd;
+                                            pedidosAgrupados[nomePrato]['total'] +=
+                                                totalPedidoItem;
                                           } else {
                                             pedidosAgrupados[nomePrato] = {
                                               'qtd': qtd,
@@ -284,7 +295,8 @@ class _MesaPageState extends State<MesaPage> {
                                             };
                                           }
                                         }
-                                        final pedidosList = pedidosAgrupados.entries.toList();
+                                        final pedidosList =
+                                            pedidosAgrupados.entries.toList();
 
                                         return ListView.builder(
                                           itemCount: pedidosList.length,
@@ -330,7 +342,8 @@ class _MesaPageState extends State<MesaPage> {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => NewOrder(idMesa: widget.numeroMesa),
+                            builder: (context) =>
+                                NewOrder(idMesa: widget.numeroMesa),
                           ),
                         );
                         fetchPedidos();
@@ -354,7 +367,8 @@ class _MesaPageState extends State<MesaPage> {
                         showDialog(
                           context: context,
                           builder: (context) {
-                            final TextEditingController valorController = TextEditingController();
+                            final TextEditingController valorController =
+                                TextEditingController();
                             return AlertDialog(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -366,7 +380,8 @@ class _MesaPageState extends State<MesaPage> {
                                   children: [
                                     TextField(
                                       controller: valorController,
-                                      keyboardType: const TextInputType.numberWithOptions(
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
                                         decimal: true,
                                       ),
                                       decoration: const InputDecoration(
@@ -383,7 +398,10 @@ class _MesaPageState extends State<MesaPage> {
                                           backgroundColor: appBarColor,
                                         ),
                                         onPressed: () async {
-                                          final valor = double.tryParse(valorController.text.replaceAll(',', '.')) ?? 0.0;
+                                          final valor = double.tryParse(
+                                                  valorController.text
+                                                      .replaceAll(',', '.')) ??
+                                              0.0;
 
                                           if (valor <= 0) {
                                             ScaffoldMessenger.of(context).showSnackBar(
@@ -398,12 +416,16 @@ class _MesaPageState extends State<MesaPage> {
                                           Navigator.pop(context);
 
                                           try {
-                                            await supabase.from('pagamento').insert({
-                                              'id_mesa': widget.numeroMesa,
-                                              'valor_pagamento': valor,
-                                            });
+                                            await supabase
+                                                .from('pagamento')
+                                                .insert({
+                                                  'id_mesa': widget.numeroMesa,
+                                                  'valor_pagamento': valor,
+                                                });
 
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
                                                   'Pagamento de R\$ ${valor.toStringAsFixed(2)} registrado com sucesso.',
@@ -414,7 +436,9 @@ class _MesaPageState extends State<MesaPage> {
 
                                             await fetchPedidos();
                                           } catch (e) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
                                                   'Erro ao registrar pagamento: $e',

@@ -441,6 +441,7 @@ class _SalaoPageState extends State<SalaoPage> {
             child: const Icon(Icons.add, color: Colors.white),
           ),
           Stack(
+            clipBehavior: Clip.none,
             children: [
               FloatingActionButton(
                 heroTag: 'notifications_btn',
@@ -456,14 +457,14 @@ class _SalaoPageState extends State<SalaoPage> {
               ),
               if (_readyOrdersCount > 0)
                 Positioned(
-                  right: 0,
-                  top: 0,
+                  right: -4,
+                  top: -4,
                   child: Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: Colors.red.shade900,
-                      borderRadius: BorderRadius.circular(999.0),
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white),
                     ),
                     constraints: const BoxConstraints(
                       minWidth: 24,

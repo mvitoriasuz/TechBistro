@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:techbistro/settings.dart';
+import 'package:techbistro/src/features/settings/presentation/settings.dart';
 import '../../mesa/presentation/mesa.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../cozinha/presentation/cozinha.dart';

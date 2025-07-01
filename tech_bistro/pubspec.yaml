@@ -10,9 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.1.0
-  supabase_flutter: ^1.10.7
+  supabase_flutter: ^2.9.1
   provider: ^6.1.1 
   shared_preferences: ^2.5.3
+  sign_in_with_apple: ^6.0.0
 
 dev_dependencies:
   flutter_test:

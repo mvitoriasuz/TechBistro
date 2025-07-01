@@ -17,6 +17,7 @@ class _NewOrderState extends State<NewOrder> {
   Map<String, List<dynamic>> pratosPorCategoria = {};
   Map<int, int> quantidades = {};
   bool loading = true;
+  List<String> categoriasOrdenadas = [];
 
   @override
   void initState() {
@@ -35,8 +36,30 @@ class _NewOrderState extends State<NewOrder> {
         quantidades[prato['id']] = 0;
       }
 
+      List<String> todasCategorias = agrupados.keys.toList();
+      todasCategorias.sort((a, b) {
+        // Nova ordem de prioridade
+        const ordemPrioridade = {
+          'entrada': 0,
+          'prato principal': 1,
+          'bebidas': 2,
+          'sobremesas': 3,
+          'outros': 4, // Para outras categorias não especificadas
+        };
+
+        final ordemA = ordemPrioridade[a.toLowerCase()] ?? 999;
+        final ordemB = ordemPrioridade[b.toLowerCase()] ?? 999;
+
+        if (ordemA != ordemB) {
+          return ordemA.compareTo(ordemB);
+        }
+        return a.toLowerCase().compareTo(b.toLowerCase());
+      });
+
+
       setState(() {
         pratosPorCategoria = agrupados;
+        categoriasOrdenadas = todasCategorias;
         loading = false;
       });
     } catch (e) {
@@ -356,12 +379,10 @@ class _NewOrderState extends State<NewOrder> {
                     children: [
                       Expanded(
                         child: PageView.builder(
-                          itemCount: pratosPorCategoria.length,
+                          itemCount: categoriasOrdenadas.length,
                           controller: PageController(viewportFraction: 0.95),
                           itemBuilder: (context, index) {
-                            final categoria = pratosPorCategoria.keys.elementAt(
-                              index,
-                            );
+                            final categoria = categoriasOrdenadas[index];
                             final pratos = pratosPorCategoria[categoria]!;
 
                             return Card(
@@ -482,8 +503,8 @@ class _NewOrderState extends State<NewOrder> {
                                                     onPressed: () {
                                                       setState(
                                                         () =>
-                                                            quantidades[id] =
-                                                                quantidade + 1,
+                                                              quantidades[id] =
+                                                                  quantidade + 1,
                                                       );
                                                     },
                                                   ),

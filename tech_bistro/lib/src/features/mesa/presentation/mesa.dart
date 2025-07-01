@@ -197,7 +197,7 @@ class _MesaPageState extends State<MesaPage> {
                               'DETALHE DA MESA ${widget.numeroMesa}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 17,
+                                fontSize: 20,
                                 fontFamily: 'Nats',
                                 color: Colors.white,
                               ),
@@ -206,7 +206,7 @@ class _MesaPageState extends State<MesaPage> {
                             Text(
                               'VALOR TOTAL: R\$ ${totalPedido.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 20,
                                 fontFamily: 'Nats',
                                 color: Colors.white,
                               ),
@@ -214,7 +214,7 @@ class _MesaPageState extends State<MesaPage> {
                             Text(
                               'PAGAMENTO PARCIAL: R\$ ${totalPago.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 20,
                                 fontFamily: 'Nats',
                                 color: Colors.white,
                               ),
@@ -222,7 +222,7 @@ class _MesaPageState extends State<MesaPage> {
                             Text(
                               'VALOR A PAGAR: R\$ ${(totalPedido - totalPago).toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 20,
                                 fontFamily: 'Nats',
                                 color: Colors.white,
                               ),
@@ -247,13 +247,13 @@ class _MesaPageState extends State<MesaPage> {
                         ),
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Text(
                               'Histórico',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 17,
+                                fontSize: 25,
                                 fontFamily: 'Nats',
                                 color: appBarColor,
                               ),
@@ -306,7 +306,7 @@ class _MesaPageState extends State<MesaPage> {
                                               title: Text(
                                                 '${pedido.value['qtd']}x - ${pedido.key}',
                                                 style: const TextStyle(
-                                                  fontSize: 16,
+                                                  fontSize: 20,
                                                   fontFamily: 'Nats',
                                                 ),
                                               ),

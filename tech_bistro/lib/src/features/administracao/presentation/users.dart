@@ -18,7 +18,7 @@ class UsersPage extends StatelessWidget {
         ),
         title: const Text(
           'Gerenciamento de Usuários',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontFamily: 'Nats'),
         ),
       ),
       body: const Center(

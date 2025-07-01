@@ -191,10 +191,10 @@ class _NewOrderState extends State<NewOrder> {
   @override
   Widget build(BuildContext context) {
     const Color appBarColor = Color(0xFF840011);
-
+  
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Novo Pedido', style: TextStyle(color: Colors.white)),
+        title: const Text('Novo Pedido', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
         backgroundColor: appBarColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),

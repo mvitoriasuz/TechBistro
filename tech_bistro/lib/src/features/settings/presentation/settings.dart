@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../../theme_provider.dart';
+import '../../../../theme_provider.dart';
+import '../../settings/presentation/politica_privacidade.dart';
+import '../../settings/presentation/termos_uso.dart';
+import '../../settings/presentation/suporte.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -22,6 +25,33 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(
+              'Conta',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: CircleAvatar(
+              radius: 24,
+              backgroundColor: primaryColor.withOpacity(0.2),
+              child: const Icon(Icons.person, size: 28, color: Colors.black87),
+            ),
+            title: const Text('Nome do Usuário', style: TextStyle(fontSize: 16, color: Colors.black87)),
+            subtitle: const Text('usuario@restaurante.com', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Informações do usuário.')),
+              );
+            },
+          ),
+          const Divider(),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
@@ -59,8 +89,7 @@ class SettingsPage extends StatelessWidget {
             title: const Text("Ativar Notificações"),
             trailing: Switch(
               value: true,
-              onChanged: (bool value) {
-              },
+              onChanged: (bool value) {},
             ),
           ),
           ListTile(
@@ -68,8 +97,7 @@ class SettingsPage extends StatelessWidget {
             title: const Text("Sons de Notificação"),
             trailing: Switch(
               value: false,
-              onChanged: (bool value) {
-              },
+              onChanged: (bool value) {},
             ),
           ),
           const Divider(),
@@ -89,15 +117,15 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.language_outlined),
             title: const Text("Idioma"),
             subtitle: const Text("Português (Brasil)"),
-            onTap: () {
-            },
+            onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.cached_outlined),
-            title: const Text("Limpar Cache"),
+            leading: const Icon(Icons.contact_support_outlined),
+            title: const Text("Contato e Suporte"),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cache limpo!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SuportePage()),
               );
             },
           ),
@@ -123,12 +151,20 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.policy_outlined),
             title: const Text("Política de Privacidade"),
             onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PoliticaPrivacidadePage()),
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: const Text("Termos de Serviço"),
             onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TermosUsoPage()),
+              );
             },
           ),
           const Divider(),
@@ -139,7 +175,7 @@ class SettingsPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'Desenvolvedores do Projeto - idioma ainda nao funciona',
+                  'Desenvolvedores do Projeto',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

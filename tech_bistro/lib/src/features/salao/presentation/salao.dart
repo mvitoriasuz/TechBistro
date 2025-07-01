@@ -304,70 +304,95 @@ class _SalaoPageState extends State<SalaoPage> {
       );
 
       showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Confirmar exclusão'),
-              content: Text(
-                'Deseja realmente excluir a mesa $numeroMesa?\n\n'
-                'Total do pedido: R\$ ${totalPedidos.toStringAsFixed(2)}\n'
-                'Total pago: R\$ ${totalPagamentos.toStringAsFixed(2)}\n\n'
-                'Essa ação apagará todos os pedidos e pagamentos da mesa.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    if ((totalPedidos - totalPagamentos).abs() > 0.001) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'A mesa possui valores em aberto e não pode ser excluída.',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
+  context: context,
+  builder: (context) => AlertDialog(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    title: Row(
+      children: const [
+        Icon(Icons.delete_outline, color: Colors.red),
+        SizedBox(width: 8),
+        Text(
+          'Confirmar exclusão',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ],
+    ),
+    content: Text(
+      'Deseja realmente excluir a mesa $numeroMesa?\n\n'
+      'Total do pedido: R\$ ${totalPedidos.toStringAsFixed(2)}\n'
+      'Total pago: R\$ ${totalPagamentos.toStringAsFixed(2)}\n\n'
+      'Essa ação apagará todos os pedidos e pagamentos da mesa.',
+      style: const TextStyle(fontSize: 16),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text(
+          'Cancelar',
+          style: TextStyle(color: Colors.grey),
+        ),
+      ),
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        ),
+        onPressed: () async {
+          Navigator.pop(context);
 
-                    try {
-                      await supabase
-                          .from('pedidos')
-                          .delete()
-                          .eq('id_mesa', numeroMesa);
-                      await supabase
-                          .from('pagamento')
-                          .delete()
-                          .eq('id_mesa', numeroMesa);
-                      await supabase
-                          .from('mesas')
-                          .delete()
-                          .eq('numero', numeroMesa);
-                      setState(() => mesas.remove(numeroMesa));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Mesa excluída com sucesso.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erro ao excluir mesa: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Confirmar'),
+          if ((totalPedidos - totalPagamentos).abs() > 0.001) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'A mesa possui valores em aberto e não pode ser excluída.',
                 ),
-              ],
-            ),
-      );
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
+          try {
+            await supabase.from('pedidos').delete().eq('id_mesa', numeroMesa);
+            await supabase.from('pagamento').delete().eq('id_mesa', numeroMesa);
+            await supabase.from('mesas').delete().eq('numero', numeroMesa);
+            setState(() => mesas.remove(numeroMesa));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mesa excluída com sucesso.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } catch (e) {
+showDialog(
+  context: context,
+  builder: (_) => AlertDialog(
+    title: const Text('Erro'),
+    content: Text('Erro ao adicionar mesa: $e'),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Fechar'),
+      ),
+    ],
+  ),
+);
+
+          }
+        },
+        child: const Text(
+          'Confirmar',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    ],
+  ),
+);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

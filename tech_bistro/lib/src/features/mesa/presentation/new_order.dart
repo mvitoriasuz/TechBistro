@@ -24,130 +24,175 @@ class _NewOrderState extends State<NewOrder> {
     fetchPratos();
   }
 
-  Future<void> fetchPratos() async {
-    try {
-      final response = await supabase.from('pratos').select();
-      Map<String, List<dynamic>> agrupados = {};
+ Future<void> fetchPratos() async {
+  try {
+    final response = await supabase.from('pratos').select();
+    Map<String, List<dynamic>> agrupados = {};
 
-      for (var prato in response) {
-        final categoria = prato['categoria_prato'] ?? 'Outros';
-        agrupados.putIfAbsent(categoria, () => []).add(prato);
-        quantidades[prato['id']] = 0;
-      }
-
-      setState(() {
-        pratosPorCategoria = agrupados;
-        loading = false;
-      });
-    } catch (e) {
-      setState(() => loading = false);
-      _mostrarSnackBar('Erro ao carregar pratos: $e');
-    }
-  }
-
-  void _mostrarSnackBar(String mensagem) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensagem)));
-  }
-
-  Future<void> _enviarPedido(
-    List<Map<String, dynamic>> pedido,
-    String? observacao,
-    String? alergia,
-    int idMesa,
-  ) async {
-    try {
-      final agora = DateTime.now();
-      for (var item in pedido) {
-        await supabase.from('pedidos').insert({
-          'id_prato': item['id'],
-          'qtd_pedido': item['quantidade'],
-          'observacao_pedido': observacao,
-          'alergia_pedido': alergia,
-          'status_pedido': 'pendente',
-          'id_mesa': idMesa,
-          'data_pedido': agora.toIso8601String().split('T')[0],
-          'horario_pedido': agora.toIso8601String().split('T')[1],
-        });
-      }
-      _mostrarSnackBar('Pedido enviado com sucesso!');
-      Navigator.pop(context);
-    } catch (e) {
-      _mostrarSnackBar('Erro ao enviar pedido: $e');
-    }
-  }
-
-  void _confirmarPedido() {
-    final pedidoFinal =
-        quantidades.entries.where((entry) => entry.value > 0).map((entry) {
-          final prato = pratosPorCategoria.values
-              .expand((x) => x)
-              .firstWhere((p) => p['id'] == entry.key);
-          return {
-            'id': prato['id'],
-            'nome': prato['nome_prato'],
-            'quantidade': entry.value,
-            'valor_unitario': prato['valor_prato'],
-          };
-        }).toList();
-
-    if (pedidoFinal.isEmpty) {
-      _showCenteredWarningDialog(
-        context,
-        'Adicione ao menos 1 item ao pedido.',
-      );
-      return;
+    for (var prato in response) {
+      final categoria = prato['categoria_prato'] ?? 'Outros';
+      agrupados.putIfAbsent(categoria, () => []).add(prato);
+      quantidades[prato['id']] = 0;
     }
 
-    _mostrarPopup(pedidoFinal);
+    setState(() {
+      pratosPorCategoria = agrupados;
+      loading = false;
+    });
+  } catch (e) {
+    setState(() => loading = false);
+    _showErrorDialog('Erro ao carregar pratos', e.toString());
   }
+}
 
-  void _showCenteredWarningDialog(BuildContext context, String message) {
-  final theme = Theme.of(context);
-  final isDark = theme.brightness == Brightness.dark;
-  final backgroundColor = theme.dialogTheme.backgroundColor ??
-      (isDark ? Colors.grey[850] : Colors.white);
-
+void _showErrorDialog(String titulo, String mensagem) {
   showDialog(
     context: context,
-    barrierDismissible: true,
-    builder: (context) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      });
-
-      return AlertDialog(
-        backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        title: Text(
-          'Atenção',
-          style: TextStyle(
-            fontFamily: 'Nats',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.amber.shade200 : Colors.orange,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: const [
+          Icon(Icons.error_outline, color: Colors.red),
+          SizedBox(width: 8),
+          Text('Erro'),
+        ],
+      ),
+      content: Text(mensagem),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(
+            'Fechar',
+            style: TextStyle(color: AppColors.secondary),
           ),
-          textAlign: TextAlign.center,
         ),
-        content: Text(
-          message,
-          style: TextStyle(
-            fontSize: 18,
-            fontFamily: 'Nats',
-            color: isDark ? Colors.white70 : Colors.black87,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      );
-    },
+      ],
+    ),
   );
 }
 
+Future<void> _enviarPedido(
+  List<Map<String, dynamic>> pedido,
+  String? observacao,
+  String? alergia,
+  int idMesa,
+) async {
+  try {
+    final agora = DateTime.now();
+    for (var item in pedido) {
+      await supabase.from('pedidos').insert({
+        'id_prato': item['id'],
+        'qtd_pedido': item['quantidade'],
+        'observacao_pedido': observacao,
+        'alergia_pedido': alergia,
+        'status_pedido': 'pendente',
+        'id_mesa': idMesa,
+        'data_pedido': agora.toIso8601String().split('T')[0],
+        'horario_pedido': agora.toIso8601String().split('T')[1],
+      });
+    }
+
+    Navigator.pop(context); // Fecha popup de informações adicionais
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Pedido enviado'),
+          ],
+        ),
+        content: const Text('Pedido enviado com sucesso!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  } catch (e) {
+    _showErrorDialog('Erro ao enviar pedido', e.toString());
+  }
+}
+
+void _confirmarPedido() {
+  final pedidoFinal =
+      quantidades.entries.where((entry) => entry.value > 0).map((entry) {
+        final prato = pratosPorCategoria.values
+            .expand((x) => x)
+            .firstWhere((p) => p['id'] == entry.key);
+        return {
+          'id': prato['id'],
+          'nome': prato['nome_prato'],
+          'quantidade': entry.value,
+          'valor_unitario': prato['valor_prato'],
+        };
+      }).toList();
+
+  if (pedidoFinal.isEmpty) {
+    _showCenteredWarningDialog(
+      context,
+      'Adicione ao menos 1 item ao pedido.',
+    );
+    return;
+  }
+
+  _mostrarPopup(pedidoFinal);
+}
+
+
+  void _showCenteredWarningDialog(BuildContext context, String message) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        theme.dialogTheme.backgroundColor ??
+        (isDark ? Colors.grey[850] : Colors.white);
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return AlertDialog(
+          backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Text(
+            'Atenção',
+            style: TextStyle(
+              fontFamily: 'Nats',
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.amber.shade200 : Colors.orange,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              fontSize: 18,
+              fontFamily: 'Nats',
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
+    );
+  }
 
   void _mostrarPopup(List<Map<String, dynamic>> pedidoFinal) {
     final alergicoController = TextEditingController();
@@ -161,49 +206,88 @@ class _NewOrderState extends State<NewOrder> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Informações adicionais'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: const [
+                  Icon(Icons.info_outline, color: AppColors.secondary),
+                  SizedBox(width: 8),
+                  Text(
+                    'Informações adicionais',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
-                      spacing: 10,
-                      children: [
-                        ElevatedButton(
-                          onPressed:
-                              () => setState(
-                                () => mostrarAlergico = !mostrarAlergico,
-                              ),
-                          child: const Text('ALÉRGICOS'),
-                        ),
-                        ElevatedButton(
-                          onPressed:
-                              () => setState(() => mostrarObs = !mostrarObs),
-                          child: const Text('OBSERVAÇÕES'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+Row(
+  children: [
+    Expanded(
+      child: SizedBox(
+        height: 45,
+        child: ElevatedButton.icon(
+          onPressed: () => setState(() => mostrarAlergico = !mostrarAlergico),
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                mostrarAlergico ? AppColors.secondary : Colors.grey[300],
+            foregroundColor:
+                mostrarAlergico ? Colors.white : Colors.black87,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          icon: const Icon(Icons.warning_amber_outlined, size: 20),
+          label: const Text('ALÉRGICOS'),
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: SizedBox(
+        height: 45,
+        child: ElevatedButton.icon(
+          onPressed: () => setState(() => mostrarObs = !mostrarObs),
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                mostrarObs ? AppColors.secondary : Colors.grey[300],
+            foregroundColor:
+                mostrarObs ? Colors.white : Colors.black87,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          icon: const Icon(Icons.note_alt_outlined, size: 20),
+          label: const Text('OBSERVAÇÕES'),
+        ),
+      ),
+    ),
+  ],
+),
+
+                    const SizedBox(height: 20),
                     if (mostrarAlergico)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: TextField(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: TextFormField(
                           controller: alergicoController,
+                          maxLines: 2,
                           decoration: const InputDecoration(
-                            labelText: 'Informe alergias',
+                            labelText: 'Informe alergias do cliente',
                             border: OutlineInputBorder(),
                           ),
-                          maxLines: 2,
                         ),
                       ),
                     if (mostrarObs)
-                      TextField(
+                      TextFormField(
                         controller: obsAdicionaisController,
+                        maxLines: 2,
                         decoration: const InputDecoration(
-                          labelText: 'Observações adicionais',
+                          labelText: 'Observações adicionais do pedido',
                           border: OutlineInputBorder(),
                         ),
-                        maxLines: 2,
                       ),
                   ],
                 ),
@@ -211,9 +295,22 @@ class _NewOrderState extends State<NewOrder> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
                   onPressed: () {
                     final alergicos = alergicoController.text.trim();
                     final obs = obsAdicionaisController.text.trim();
@@ -228,7 +325,10 @@ class _NewOrderState extends State<NewOrder> {
                     );
                     Navigator.of(context).pop();
                   },
-                  child: const Text('ENVIAR PEDIDO'),
+                  child: const Text(
+                    'ENVIAR PEDIDO',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -313,7 +413,7 @@ class _NewOrderState extends State<NewOrder> {
                             index,
                           );
                           final pratos = pratosPorCategoria[categoria]!;
-                      
+
                           return Card(
                             elevation: 3,
                             shape: RoundedRectangleBorder(

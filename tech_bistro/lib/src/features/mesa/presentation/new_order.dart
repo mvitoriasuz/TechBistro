@@ -404,11 +404,6 @@ class _NewOrderState extends State<NewOrder> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.secondary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              12,
-                            ), // Borda arredondada visível
-                          ),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 12,

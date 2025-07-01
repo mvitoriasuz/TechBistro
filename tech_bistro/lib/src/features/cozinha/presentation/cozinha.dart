@@ -17,43 +17,67 @@ class _CozinhaPageState extends State<CozinhaPage> {
   List<dynamic> pedidosEmPreparo = [];
   List<dynamic> pedidosProntos = [];
   bool carregando = true;
-  Timer? timer;
+  StreamSubscription<List<Map<String, dynamic>>>? _pedidosRealtimeSubscription;
 
   @override
   void initState() {
     super.initState();
-    _carregarPedidos();
-    timer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _carregarPedidos();
-    });
+    _loadAndListenPedidos();
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    _pedidosRealtimeSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _carregarPedidos() async {
+  Future<void> _loadAndListenPedidos() async {
     setState(() => carregando = true);
     try {
-      final response = await supabase
+      final initialResponse = await supabase
           .from('pedidos')
           .select('*, pratos(*), observacao_pedido, alergia_pedido, horario_finalizacao');
-
-      setState(() {
-        pedidosPendentes = response.where((p) => p['status_pedido'] == 'pendente').toList();
-        pedidosEmPreparo = response.where((p) => p['status_pedido'] == 'em_preparo').toList();
-        pedidosProntos = response.where((p) => p['status_pedido'] == 'pronto').toList();
-        carregando = false;
-      });
+      _updatePedidosState(initialResponse);
     } catch (e) {
-      setState(() => carregando = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao carregar pedidos: $e')),
+        SnackBar(content: Text('Erro ao carregar pedidos iniciais: $e')),
       );
+    } finally {
+      setState(() => carregando = false);
     }
+
+    _pedidosRealtimeSubscription = supabase
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .listen((List<Map<String, dynamic>> data) async {
+          try {
+            final updatedResponse = await supabase
+                .from('pedidos')
+                .select('*, pratos(*), observacao_pedido, alergia_pedido, horario_finalizacao');
+            _updatePedidosState(updatedResponse);
+            print('CozinhaPage: Dados atualizados via Realtime e refetch.');
+          } catch (e) {
+            print('CozinhaPage: Erro ao refetchar pedidos via stream: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erro ao atualizar pedidos em tempo real: $e')),
+            );
+          }
+        }, onError: (error) {
+          print('CozinhaPage: Erro no listener de tempo real de pedidos: $error');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro no stream de pedidos: $error')),
+          );
+        });
   }
+
+  void _updatePedidosState(List<dynamic> allPedidos) {
+    setState(() {
+      pedidosPendentes = allPedidos.where((p) => p['status_pedido'] == 'pendente').toList();
+      pedidosEmPreparo = allPedidos.where((p) => p['status_pedido'] == 'em_preparo').toList();
+      pedidosProntos = allPedidos.where((p) => p['status_pedido'] == 'pronto').toList();
+    });
+  }
+
 
   Future<void> _atualizarStatusPedido(int idPedido, String novoStatus) async {
     try {
@@ -68,7 +92,6 @@ class _CozinhaPageState extends State<CozinhaPage> {
           .from('pedidos')
           .update(updatePayload)
           .eq('id', idPedido);
-      _carregarPedidos();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao atualizar pedido: $e')),

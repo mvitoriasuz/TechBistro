@@ -20,21 +20,21 @@ class _SalaoPageState extends State<SalaoPage> {
   List<int> mesas = [];
   bool isLoading = true;
   int _readyOrdersCount = 0;
-  Timer? _notificationTimer;
-  StreamSubscription? _mesasSubscription;
+  StreamSubscription<List<Map<String, dynamic>>>? _mesasSubscription;
+  StreamSubscription<List<Map<String, dynamic>>>? _readyOrdersSubscription;
 
   @override
   void initState() {
     super.initState();
     carregarMesas();
-    _startNotificationListener();
     _startMesasRealtimeListener();
+    _setupReadyOrdersRealtimeListener();
   }
 
   @override
   void dispose() {
-    _notificationTimer?.cancel();
     _mesasSubscription?.cancel();
+    _readyOrdersSubscription?.cancel();
     super.dispose();
   }
 
@@ -45,7 +45,7 @@ class _SalaoPageState extends State<SalaoPage> {
         final ids = response.map<int>((m) => m['numero'] as int).toList()..sort();
         setState(() => mesas = ids);
       }
-    } catch (e) { // Corrigido aqui: `_` foi substituído por `e`
+    } catch (e) {
       print('Erro ao carregar mesas: $e');
     } finally {
       setState(() => isLoading = false);
@@ -80,11 +80,16 @@ class _SalaoPageState extends State<SalaoPage> {
     }
   }
 
-  void _startNotificationListener() {
+  void _setupReadyOrdersRealtimeListener() {
     _fetchReadyOrdersCount();
-    _notificationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      _fetchReadyOrdersCount();
-    });
+    _readyOrdersSubscription = Supabase.instance.client
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .listen((List<Map<String, dynamic>> data) {
+          _fetchReadyOrdersCount();
+        }, onError: (error) {
+          print('Erro no listener de tempo real de pedidos prontos: $error');
+        });
   }
 
   Future<void> adicionarMesa() async {
@@ -129,7 +134,7 @@ class _SalaoPageState extends State<SalaoPage> {
 
                 try {
                   await Supabase.instance.client.from('mesas').insert({'numero': numero});
-                  await carregarMesas(); // Mantido para garantir atualização imediata após adicionar
+                  await carregarMesas();
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -198,9 +203,23 @@ class _SalaoPageState extends State<SalaoPage> {
           .eq('id_mesa', numeroMesa);
 
       double totalPedidos = pedidos.fold(0.0, (total, p) {
-        final qtd = (p['qtd_pedido'] ?? 0) as int;
-        final valor = (p['pratos']?['valor_prato'] ?? 0.0) as double;
-        return total + qtd * valor;
+        final qtd = (p['qtd_pedido'] ?? 0);
+        final valorRaw = p['pratos']?['valor_prato'];
+
+        double valor = 0.0;
+        if (valorRaw is int) {
+          valor = valorRaw.toDouble();
+        } else if (valorRaw is double) {
+          valor = valorRaw;
+        }
+
+        double quantidade = 0.0;
+        if (qtd is int) {
+          quantidade = qtd.toDouble();
+        } else if (qtd is double) {
+          quantidade = qtd;
+        }
+        return total + (quantidade * valor);
       });
 
       final pagamentos = await supabase
@@ -209,8 +228,22 @@ class _SalaoPageState extends State<SalaoPage> {
           .eq('id_mesa', numeroMesa);
 
       double totalPagamentos = pagamentos.fold(0.0, (total, pg) {
-        return total + (pg['valor_pagamento'] ?? 0.0) as double;
+        final valorPagamentoRaw = pg['valor_pagamento'];
+        double valorPagamento = 0.0;
+        if (valorPagamentoRaw is int) {
+          valorPagamento = valorPagamentoRaw.toDouble();
+        } else if (valorPagamentoRaw is double) {
+          valorPagamento = valorPagamentoRaw;
+        }
+        return total + valorPagamento;
       });
+
+      print('Mesa $numeroMesa:');
+      print('Total de Pedidos: R\$ ${totalPedidos.toStringAsFixed(2)}');
+      print('Total Pago: R\$ ${totalPagamentos.toStringAsFixed(2)}');
+      print('Diferença (abs): ${(totalPedidos - totalPagamentos).abs()}');
+      print('Condição de bloqueio: ${(totalPedidos - totalPagamentos).abs() > 0.01}');
+
 
       showDialog(
         context: context,
@@ -230,7 +263,7 @@ class _SalaoPageState extends State<SalaoPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                if ((totalPedidos - totalPagamentos).abs() > 0.01) {
+                if ((totalPedidos - totalPagamentos).abs() > 0.001) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('A mesa possui valores em aberto e não pode ser excluída.'),
@@ -441,7 +474,7 @@ class _SalaoPageState extends State<SalaoPage> {
             child: const Icon(Icons.add, color: Colors.white),
           ),
           Stack(
-            clipBehavior:  Clip.none,
+            clipBehavior: Clip.none,
             children: [
               FloatingActionButton(
                 heroTag: 'notifications_btn',

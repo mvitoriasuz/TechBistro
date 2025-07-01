@@ -93,12 +93,61 @@ class _NewOrderState extends State<NewOrder> {
         }).toList();
 
     if (pedidoFinal.isEmpty) {
-      _mostrarSnackBar('Adicione ao menos 1 item ao pedido.');
+      _showCenteredWarningDialog(
+        context,
+        'Adicione ao menos 1 item ao pedido.',
+      );
       return;
     }
 
     _mostrarPopup(pedidoFinal);
   }
+
+  void _showCenteredWarningDialog(BuildContext context, String message) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final backgroundColor = theme.dialogTheme.backgroundColor ??
+      (isDark ? Colors.grey[850] : Colors.white);
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+
+      return AlertDialog(
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: Text(
+          'Atenção',
+          style: TextStyle(
+            fontFamily: 'Nats',
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.amber.shade200 : Colors.orange,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontSize: 18,
+            fontFamily: 'Nats',
+            color: isDark ? Colors.white70 : Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    },
+  );
+}
+
 
   void _mostrarPopup(List<Map<String, dynamic>> pedidoFinal) {
     final alergicoController = TextEditingController();
@@ -264,7 +313,7 @@ class _NewOrderState extends State<NewOrder> {
                             index,
                           );
                           final pratos = pratosPorCategoria[categoria]!;
-
+                      
                           return Card(
                             elevation: 3,
                             shape: RoundedRectangleBorder(
@@ -312,7 +361,12 @@ class _NewOrderState extends State<NewOrder> {
                                             style: const TextStyle(
                                               fontFamily: 'Nats',
                                               fontSize: 21,
-                                              color: Color.fromARGB(255, 124, 118, 118),
+                                              color: Color.fromARGB(
+                                                255,
+                                                124,
+                                                118,
+                                                118,
+                                              ),
                                             ),
                                           ),
                                           trailing: Container(

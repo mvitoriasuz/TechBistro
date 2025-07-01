@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/ui/theme/app_colors.dart';
-import 'package:techbistro/src/features/salao/presentation/salao.dart';
+import 'package:techbistro/src/features/salao/presentation/salao.dart'; // Importe SalaoPage
+
 import 'new_order.dart';
 
 class MesaPage extends StatefulWidget {
@@ -289,17 +290,19 @@ class _MesaPageState extends State<MesaPage> {
                                                   'Prato';
                                           final qtd =
                                               pedido['qtd_pedido'] ?? 0;
-                                          final valorPrato =
-                                              (pedido['pratos']?['valor_prato'] as num? ?? 0.0).toDouble();
+                                          final valorPrato = (pedido['pratos']
+                                                  ?['valor_prato'] as num? ??
+                                              0.0)
+                                              .toDouble();
                                           final totalPedidoItem =
                                               qtd * valorPrato;
 
-                                          if (pedidosAgrupados.containsKey(
-                                              nomePrato)) {
+                                          if (pedidosAgrupados
+                                              .containsKey(nomePrato)) {
                                             pedidosAgrupados[nomePrato]['qtd'] +=
                                                 qtd;
-                                            pedidosAgrupados[nomePrato]['total'] +=
-                                                totalPedidoItem;
+                                            pedidosAgrupados[nomePrato]
+                                                ['total'] += totalPedidoItem;
                                           } else {
                                             pedidosAgrupados[nomePrato] = {
                                               'qtd': qtd,
@@ -379,10 +382,10 @@ class _MesaPageState extends State<MesaPage> {
                             final TextEditingController valorController =
                                 TextEditingController();
                             final formKey = GlobalKey<FormState>();
-                            bool isLoading = false;
 
                             return StatefulBuilder(
                               builder: (context, setState) {
+                                final valorAPagar = totalPedido - totalPago;
                                 return AlertDialog(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -398,6 +401,15 @@ class _MesaPageState extends State<MesaPage> {
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
+                                        Text(
+                                          'Valor a pagar: R\$ ${valorAPagar.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: appBarColor,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
                                         TextFormField(
                                           controller: valorController,
                                           keyboardType:
@@ -413,12 +425,13 @@ class _MesaPageState extends State<MesaPage> {
                                           ),
                                           validator: (value) {
                                             final parsed = double.tryParse(
-                                              value?.replaceAll(',', '.') ??
-                                                  '',
-                                            );
-                                            if (parsed == null ||
-                                                parsed <= 0) {
+                                                value?.replaceAll(',', '.') ??
+                                                    '');
+                                            if (parsed == null || parsed <= 0) {
                                               return 'Insira um valor válido.';
+                                            }
+                                            if (parsed > valorAPagar + 0.01) {
+                                              return 'Valor pago não pode ser maior que o valor a pagar.';
                                             }
                                             return null;
                                           },
@@ -436,133 +449,94 @@ class _MesaPageState extends State<MesaPage> {
                                                     BorderRadius.circular(16),
                                               ),
                                             ),
-                                            icon: isLoading
-                                                ? const SizedBox(
-                                                    width: 18,
-                                                    height: 18,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color:
-                                                          Colors.white,
-                                                    ),
-                                                  )
-                                                : const Icon(
-                                                    Icons.check,
-                                                    color: Colors.white),
-                                            label: Text(
-                                              isLoading
-                                                  ? 'Processando...'
-                                                  : 'Efetivar Pagamento',
-                                              style: const TextStyle(
+                                            icon: const Icon(
+                                                Icons.check,
+                                                color: Colors.white),
+                                            label: const Text(
+                                              'Efetivar Pagamento',
+                                              style: TextStyle(
                                                 color: Colors.white,
                                               ),
                                             ),
-                                            onPressed: isLoading
-                                                ? null
-                                                : () async {
-                                                    if (!formKey
-                                                        .currentState!
-                                                        .validate())
-                                                      return;
+                                            onPressed: () async {
+                                              if (!formKey.currentState!
+                                                  .validate()) {
+                                                return;
+                                              }
 
-                                                    final valor =
-                                                        double.parse(
-                                                      valorController
-                                                          .text
-                                                          .replaceAll(
-                                                            ',',
-                                                            '.',
-                                                          ),
-                                                    );
+                                              final valor = double.parse(
+                                                  valorController.text
+                                                      .replaceAll(',', '.'));
 
-                                                    setState(
-                                                      () =>
-                                                          isLoading = true,
-                                                    );
+                                              Navigator.pop(
+                                                  context); // Fecha o dialog de pagamento
 
-                                                    try {
-                                                      await supabase
-                                                          .from('pagamento')
-                                                          .insert({
-                                                            'id_mesa':
-                                                                widget
-                                                                    .numeroMesa,
-                                                            'valor_pagamento':
-                                                                valor,
-                                                          });
+                                              try {
+                                                await supabase
+                                                    .from('pagamento')
+                                                    .insert({
+                                                      'id_mesa':
+                                                          widget.numeroMesa,
+                                                      'valor_pagamento': valor,
+                                                    });
 
-                                                      Navigator.pop(
-                                                        context,
-                                                      ); 
-
-                                                      showDialog(
-                                                        context: context,
-                                                        builder:
-                                                            (
-                                                              context,
-                                                            ) => AlertDialog(
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                        16),
-                                                              ),
-                                                              title: Row(
-                                                                children: [
-                                                                  const Icon(
-                                                                    Icons
-                                                                        .check_circle,
-                                                                    color:
-                                                                        Colors.green,
-                                                                  ),
-                                                                  const SizedBox(
-                                                                    width:
-                                                                        8,
-                                                                  ),
-                                                                  Text(
-                                                                    'Pagamento Registrado',
-                                                                    style: Theme.of(
-                                                                            context)
-                                                                        .textTheme
-                                                                        .titleMedium,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              content: Text(
-                                                                'Pagamento de R\$ ${valor.toStringAsFixed(2)} registrado com sucesso.',
-                                                              ),
-                                                              actions: [
-                                                                TextButton(
-                                                                  onPressed:
-                                                                      () => Navigator.pop(
-                                                                          context),
-                                                                  child:
-                                                                      const Text( 'OK', style: TextStyle(color: appBarColor) ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                      );
-
-                                                      await fetchPedidos();
-                                                    } catch (e) {
-                                                      setState(
-                                                        () =>
-                                                            isLoading =
-                                                                false,
-                                                      );
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(
-                                                            'Erro ao registrar pagamento: $e',
-                                                          ),
-                                                          backgroundColor:
-                                                              Colors.red,
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) =>
+                                                      AlertDialog(
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              16),
+                                                    ),
+                                                    title: Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.check_circle,
+                                                          color: Colors.green,
                                                         ),
-                                                      );
-                                                    }
-                                                  },
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        Text(
+                                                          'Pagamento Registrado',
+                                                          style: Theme.of(
+                                                                  context)
+                                                              .textTheme
+                                                              .titleMedium,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    content: Text(
+                                                      'Pagamento de R\$ ${valor.toStringAsFixed(2)} registrado com sucesso.',
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                context),
+                                                        child: const Text('OK',
+                                                            style: TextStyle(
+                                                                color:
+                                                                    appBarColor)),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+
+                                                await fetchPedidos();
+                                              } catch (e) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Erro ao registrar pagamento: $e',
+                                                    ),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            },
                                           ),
                                         ),
                                       ],

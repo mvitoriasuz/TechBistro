@@ -437,7 +437,7 @@ class _MesaPageState extends State<MesaPage> {
                                             height: 45,
                                             child: ElevatedButton.icon(
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: appBarColor,
+                                                backgroundColor: AppColors.secondary,
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(16),

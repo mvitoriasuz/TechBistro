@@ -57,6 +57,7 @@ class _SalaoPageState extends State<SalaoPage> {
         .from('mesas')
         .stream(primaryKey: ['numero'])
         .listen((List<Map<String, dynamic>> data) {
+      print('Realtime de mesas acionado. Dados recebidos: $data');
       carregarMesas();
     }, onError: (error) {
       print('Erro no listener de tempo real das mesas: $error');

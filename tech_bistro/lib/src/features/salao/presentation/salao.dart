@@ -40,12 +40,9 @@ class _SalaoPageState extends State<SalaoPage> {
 
   Future<void> carregarMesas() async {
     try {
-      final response = await Supabase.instance.client
-          .from('mesas')
-          .select('numero');
+      final response = await Supabase.instance.client.from('mesas').select('numero');
       if (response is List) {
-        final ids =
-            response.map<int>((m) => m['numero'] as int).toList()..sort();
+        final ids = response.map<int>((m) => m['numero'] as int).toList()..sort();
         setState(() => mesas = ids);
       }
     } catch (e) {
@@ -59,15 +56,12 @@ class _SalaoPageState extends State<SalaoPage> {
     _mesasSubscription = Supabase.instance.client
         .from('mesas')
         .stream(primaryKey: ['numero'])
-        .listen(
-          (List<Map<String, dynamic>> data) {
-            print('Realtime de mesas acionado. Dados recebidos: $data');
-            carregarMesas();
-          },
-          onError: (error) {
-            print('Erro no listener de tempo real das mesas: $error');
-          },
-        );
+        .listen((List<Map<String, dynamic>> data) {
+      print('Realtime de mesas acionado. Dados recebidos: $data');
+      carregarMesas();
+    }, onError: (error) {
+      print('Erro no listener de tempo real das mesas: $error');
+    });
   }
 
   Future<void> _fetchReadyOrdersCount() async {
@@ -92,14 +86,11 @@ class _SalaoPageState extends State<SalaoPage> {
     _readyOrdersSubscription = Supabase.instance.client
         .from('pedidos')
         .stream(primaryKey: ['id'])
-        .listen(
-          (List<Map<String, dynamic>> data) {
-            _fetchReadyOrdersCount();
-          },
-          onError: (error) {
-            print('Erro no listener de tempo real de pedidos prontos: $error');
-          },
-        );
+        .listen((List<Map<String, dynamic>> data) {
+          _fetchReadyOrdersCount();
+        }, onError: (error) {
+          print('Erro no listener de tempo real de pedidos prontos: $error');
+        });
   }
 
   Future<void> adicionarMesa() async {
@@ -108,93 +99,53 @@ class _SalaoPageState extends State<SalaoPage> {
     showDialog(
       context: context,
       builder: (context) {
-        final formKey = GlobalKey<FormState>();
-        final TextEditingController mesaController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Adicionar nova mesa'),
+          content: TextField(
+            controller: mesaController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Número da mesa',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final entrada = mesaController.text.trim();
+                final numero = int.tryParse(entrada);
 
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Row(
-                children: const [
-                  Icon(Icons.add_circle_outline, color: AppColors.secondary),
-                  SizedBox(width: 8),
-                  Text(
-                    'Adicionar nova mesa',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              content: Form(
-                key: formKey,
-                child: TextFormField(
-                  controller: mesaController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Número da mesa',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    final numero = int.tryParse(value ?? '');
-                    if (numero == null || numero <= 0) {
-                      return 'Informe um número válido.';
-                    }
-                    if (mesas.contains(numero)) {
-                      return 'A mesa $numero já está aberta.';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancelar',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
+                if (numero == null || numero <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Número inválido.'), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
 
-                    final numero = int.parse(mesaController.text.trim());
+                if (mesas.contains(numero)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('A mesa $numero já está aberta.'), backgroundColor: Colors.orange),
+                  );
+                  return;
+                }
 
-                    try {
-                      await Supabase.instance.client.from('mesas').insert({
-                        'numero': numero,
-                      });
-                      await carregarMesas();
-                      Navigator.pop(context);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erro ao adicionar mesa: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Confirmar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            );
-          },
+                try {
+                  await Supabase.instance.client.from('mesas').insert({'numero': numero});
+                  await carregarMesas();
+                  Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erro ao adicionar mesa: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
         );
       },
     );
@@ -209,33 +160,29 @@ class _SalaoPageState extends State<SalaoPage> {
           .select('alergia_pedido')
           .eq('id_mesa', numeroMesa);
 
-      final alergias =
-          response
-              .map<String?>((p) => p['alergia_pedido']?.toString())
-              .where((a) => a != null && a!.isNotEmpty)
-              .toSet();
+      final alergias = response
+          .map<String?>((p) => p['alergia_pedido']?.toString())
+          .where((a) => a != null && a!.isNotEmpty)
+          .toSet();
 
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Alergias da Mesa $numeroMesa'),
-              content:
-                  alergias.isEmpty
-                      ? const Text('Nenhuma alergia registrada.')
-                      : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children:
-                            alergias.map<Widget>((e) => Text('- $e')).toList(),
-                      ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Fechar'),
+        builder: (context) => AlertDialog(
+          title: Text('Alergias da Mesa $numeroMesa'),
+          content: alergias.isEmpty
+              ? const Text('Nenhuma alergia registrada.')
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: alergias.map<Widget>((e) => Text('- $e')).toList(),
                 ),
-              ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fechar'),
             ),
+          ],
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -247,10 +194,7 @@ class _SalaoPageState extends State<SalaoPage> {
     }
   }
 
-  Future<void> _confirmarExclusaoMesa(
-    BuildContext context,
-    int numeroMesa,
-  ) async {
+  Future<void> _confirmarExclusaoMesa(BuildContext context, int numeroMesa) async {
     final supabase = Supabase.instance.client;
 
     try {
@@ -299,81 +243,59 @@ class _SalaoPageState extends State<SalaoPage> {
       print('Total de Pedidos: R\$ ${totalPedidos.toStringAsFixed(2)}');
       print('Total Pago: R\$ ${totalPagamentos.toStringAsFixed(2)}');
       print('Diferença (abs): ${(totalPedidos - totalPagamentos).abs()}');
-      print(
-        'Condição de bloqueio: ${(totalPedidos - totalPagamentos).abs() > 0.01}',
-      );
+      print('Condição de bloqueio: ${(totalPedidos - totalPagamentos).abs() > 0.01}');
+
 
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Confirmar exclusão'),
-              content: Text(
-                'Deseja realmente excluir a mesa $numeroMesa?\n\n'
-                'Total do pedido: R\$ ${totalPedidos.toStringAsFixed(2)}\n'
-                'Total pago: R\$ ${totalPagamentos.toStringAsFixed(2)}\n\n'
-                'Essa ação apagará todos os pedidos e pagamentos da mesa.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    if ((totalPedidos - totalPagamentos).abs() > 0.001) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'A mesa possui valores em aberto e não pode ser excluída.',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                      return;
-                    }
-
-                    try {
-                      await supabase
-                          .from('pedidos')
-                          .delete()
-                          .eq('id_mesa', numeroMesa);
-                      await supabase
-                          .from('pagamento')
-                          .delete()
-                          .eq('id_mesa', numeroMesa);
-                      await supabase
-                          .from('mesas')
-                          .delete()
-                          .eq('numero', numeroMesa);
-                      setState(() => mesas.remove(numeroMesa));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Mesa excluída com sucesso.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Erro ao excluir mesa: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Confirmar'),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: const Text('Confirmar exclusão'),
+          content: Text(
+            'Deseja realmente excluir a mesa $numeroMesa?\n\n'
+            'Total do pedido: R\$ ${totalPedidos.toStringAsFixed(2)}\n'
+            'Total pago: R\$ ${totalPagamentos.toStringAsFixed(2)}\n\n'
+            'Essa ação apagará todos os pedidos e pagamentos da mesa.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
             ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                if ((totalPedidos - totalPagamentos).abs() > 0.001) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('A mesa possui valores em aberto e não pode ser excluída.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await supabase.from('pedidos').delete().eq('id_mesa', numeroMesa);
+                  await supabase.from('pagamento').delete().eq('id_mesa', numeroMesa);
+                  await supabase.from('mesas').delete().eq('numero', numeroMesa);
+                  setState(() => mesas.remove(numeroMesa));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Mesa excluída com sucesso.'), backgroundColor: Colors.green),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erro ao excluir mesa: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao validar exclusão: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Erro ao validar exclusão: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -384,26 +306,19 @@ class _SalaoPageState extends State<SalaoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Techbistro',
-          style: TextStyle(color: Colors.white, fontFamily: 'Nats'),
-        ),
+        title: const Text('Techbistro', style: TextStyle(color: Colors.white, fontFamily: 'Nats')),
         backgroundColor: appBarColor,
         leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
             },
           ),
         ],
@@ -414,10 +329,7 @@ class _SalaoPageState extends State<SalaoPage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(color: Color(0xFF8C0010)),
-              child: Text(
-                'Ambientes',
-                style: TextStyle(color: Colors.white, fontSize: 25),
-              ),
+              child: Text('Ambientes', style: TextStyle(color: Colors.white, fontSize: 25)),
             ),
             ListTile(
               leading: const Icon(Icons.restaurant),
@@ -429,10 +341,7 @@ class _SalaoPageState extends State<SalaoPage> {
               title: const Text('Cozinha'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CozinhaPage()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const CozinhaPage()));
               },
             ),
             ListTile(
@@ -445,125 +354,102 @@ class _SalaoPageState extends State<SalaoPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : mesas.isEmpty
-                ? const Center(
-                  child: Text(
-                    'Não há mesas abertas',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                )
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : mesas.isEmpty
+                ? const Center(child: Text('Não há mesas abertas', style: TextStyle(fontSize: 18)))
                 : GridView.builder(
-                  itemCount: mesas.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    return Card(
-                      color: appBarColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Stack(
-                        children: [
-                          InkWell(
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) =>
-                                          MesaPage(numeroMesa: mesas[index]),
+                    itemCount: mesas.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1,
+                    ),
+                    itemBuilder: (context, index) {
+                      return Card(
+                        color: appBarColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Stack(
+                          children: [
+                            InkWell(
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MesaPage(numeroMesa: mesas[index]),
+                                  ),
+                                );
+                                carregarMesas();
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text('Mesa ${mesas[index]}',
+                                        style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 8),
+                                    Center(
+                                      child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final size = constraints.maxWidth * 0.6;
+                                          return SvgPicture.asset(
+                                            'assets/mesa.svg',
+                                            fit: BoxFit.contain,
+                                            width: size,
+                                            height: size,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                              carregarMesas();
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Mesa ${mesas[index]}',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert, color: Colors.white),
+                                onSelected: (value) {
+                                  if (value == 'alergias') {
+                                    mostrarAlergiasMesa(mesas[index]);
+                                  } else if (value == 'excluir') {
+                                    _confirmarExclusaoMesa(context, mesas[index]);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem<String>(
+                                    value: 'alergias',
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.warning_rounded, color: Colors.orange),
+                                        SizedBox(width: 8),
+                                        Text('Ver alergias'),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Center(
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final size = constraints.maxWidth * 0.6;
-                                        return SvgPicture.asset(
-                                          'assets/mesa.svg',
-                                          fit: BoxFit.contain,
-                                          width: size,
-                                          height: size,
-                                        );
-                                      },
+                                  PopupMenuItem<String>(
+                                    value: 'excluir',
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Excluir mesa'),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: PopupMenuButton<String>(
-                              icon: const Icon(
-                                Icons.more_vert,
-                                color: Colors.white,
-                              ),
-                              onSelected: (value) {
-                                if (value == 'alergias') {
-                                  mostrarAlergiasMesa(mesas[index]);
-                                } else if (value == 'excluir') {
-                                  _confirmarExclusaoMesa(context, mesas[index]);
-                                }
-                              },
-                              itemBuilder:
-                                  (context) => [
-                                    PopupMenuItem<String>(
-                                      value: 'alergias',
-                                      child: Row(
-                                        children: const [
-                                          Icon(
-                                            Icons.warning_rounded,
-                                            color: Colors.orange,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text('Ver alergias'),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem<String>(
-                                      value: 'excluir',
-                                      child: Row(
-                                        children: const [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Excluir mesa'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
       ),
       floatingActionButton: Row(
         mainAxisSize: MainAxisSize.max,
@@ -578,18 +464,14 @@ class _SalaoPageState extends State<SalaoPage> {
               );
             },
             backgroundColor: AppColors.secondary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             child: const Icon(Icons.person, color: Colors.white),
           ),
           FloatingActionButton(
             heroTag: 'add_mesa_btn',
             onPressed: adicionarMesa,
             backgroundColor: AppColors.secondary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             child: const Icon(Icons.add, color: Colors.white),
           ),
           Stack(
@@ -600,19 +482,12 @@ class _SalaoPageState extends State<SalaoPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const PedidosProntosPage(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const PedidosProntosPage()),
                   );
                 },
                 backgroundColor: AppColors.secondary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: const Icon(
-                  Icons.notifications_active,
-                  color: Colors.white,
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                child: const Icon(Icons.notifications_active, color: Colors.white),
               ),
               if (_readyOrdersCount > 0)
                 Positioned(

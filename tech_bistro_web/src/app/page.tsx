@@ -59,7 +59,7 @@ const FeatureCard = ({ icon: Icon, title, description }: { icon: React.ElementTy
 export default function Home() {
   const features = [
     { icon: Smartphone, title: "Agilidade de pedido", description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." },
-    { icon: ChefHat, title: "Integração da cozinha", description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." },
+    { icon: ChefHat, title: "Integração da cozinha", description: "Lorem Ipsum is simply sdummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." },
     { icon: CreditCard, title: "Pagamento", description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." },
     { icon: BarChart, title: "Verifique seu investimento", description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s." },
   ];

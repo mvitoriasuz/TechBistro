@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'src/features/usuario/presentation/usuario.dart';
+import 'src/features/home/presentation/home.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const UsuarioPage()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     });
   }

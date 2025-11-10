@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'widgets/sidebar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'src/features/cardapio/presentation/cardapio.dart';
 import 'src/features/dashboard/presentation/dashboard.dart';

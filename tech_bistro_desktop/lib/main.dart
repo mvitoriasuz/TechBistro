@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
+import 'package:tech_bistro_desktop/src/features/home/presentation/home.dart';
 import 'src/features/cardapio/presentation/cardapio.dart';
 import 'src/features/dashboard/presentation/dashboard.dart';
 import 'src/features/hierarquia/presentation/hierarquia.dart';
 import 'src/features/usuario/presentation/usuario.dart';
-import 'splash_screen.dart';
+import 'auth_screen.dart';
 
 
 void main() async {
@@ -24,7 +25,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      //depois precisa alterar para a tela de autenticação
+      home: HomePage(),
     );
   }
 }

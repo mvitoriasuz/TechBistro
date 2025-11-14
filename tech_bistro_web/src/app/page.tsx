@@ -242,18 +242,20 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
-      {/* Footer em Vermelho conforme solicitado */}
       <footer id="contato" className="bg-[#900000] text-white pt-20 pb-8 border-t border-white/10">
         <div className="container mx-auto px-8">
           <div className="flex flex-col lg:flex-row justify-between gap-12 mb-16">
             
             <div className="lg:w-1/3 space-y-6">
               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-white/10 flex items-center justify-center rounded-sm backdrop-blur-sm">
-                    <span className="font-serif font-bold text-white text-xl">T</span>
-                 </div>
-                 <span className="text-xl font-bold tracking-[0.2em] uppercase text-white">Techbistro</span>
+                 <Image
+                    src="/logo.svg"
+                    alt="Logo Techbistro"
+                    width={30}
+                    height={30}
+                    className="filter brightness-150"
+                 />
+                 <span className="text-2xl font-bold tracking-[0.2em] uppercase text-white">Techbistro</span>
               </div>
               <p className="text-white/80 text-sm leading-loose font-light max-w-xs">
                 Transformando a gestão gastronômica com elegância e precisão tecnológica. Simplifique processos e amplie seus resultados.

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase';
 import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Utensils } from 'lucide-react';
+import Image from 'next/image';
 
 interface PageProps {
   params: { id: string };
@@ -18,6 +19,7 @@ interface Prato {
   valor_prato: number;
   categoria_prato: string;
   id_estabelecimento: string;
+  descricao_prato?: string;
 }
 
 interface CategoriaAgrupada {
@@ -65,16 +67,13 @@ export default async function CardapioPage({ params }: PageProps) {
     notFound();
   }
 
-  console.log(`Buscando pratos para id_estabelecimento: ${idDoEstabelecimento}`);
   const { data: pratos, error: pratosError } = await supabase
     .from('pratos')
-    .select('id, nome_prato, valor_prato, categoria_prato, id_estabelecimento')
+    .select('id, nome_prato, valor_prato, categoria_prato, id_estabelecimento, descricao_prato')
     .eq('id_estabelecimento', idDoEstabelecimento);
 
   if (pratosError) {
     console.error("Erro detalhado ao buscar pratos:", pratosError);
-  } else {
-    console.log(`Encontrados ${pratos ? pratos.length : 0} pratos.`);
   }
 
   const listaDePratos = pratos ?? [];
@@ -93,47 +92,78 @@ export default async function CardapioPage({ params }: PageProps) {
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] dark:bg-gray-900 font-sans text-dark-text dark:text-light-text">
-      <header className="bg-brand-red text-white p-4 shadow-md sticky top-0 z-50 flex items-center justify-center">
-        <h1 className="text-xl font-semibold text-center">{estabelecimento.nome_estabelecimento}</h1>
+    <div className="min-h-screen bg-[#3B0A0A] font-sans selection:bg-[#C5A47E]/20">
+      
+      <header className="bg-[#3B0A0A] text-white py-4 sticky top-0 z-50 border-b border-[#C5A47E]/20 shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
+        <div className="container mx-auto px-5 max-w-3xl flex items-center justify-between">
+          <Image
+            src="/logo.svg"
+            alt="Logo Techbistro"
+            width={32}
+            height={32}
+            className="filter brightness-150"
+          />
+          
+          <h1 className="text-xl font-semibold text-center tracking-wide uppercase">
+            {estabelecimento.nome_estabelecimento}
+          </h1>
+
+          <div style={{ width: 32 }} />
+        </div>
       </header>
 
-      <main className="container mx-auto p-3 sm:p-4 md:p-6 pb-16">
+      <main className="container mx-auto px-5 pt-6 pb-20 max-w-3xl">
         {categoriasParaRenderizar.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-400 mt-10">Nenhum item encontrado no cardápio.</p>
+          <p className="text-center text-white/70 mt-16 text-lg">
+            Nenhum item encontrado.
+          </p>
         ) : (
           categoriasParaRenderizar.map((categoria) => (
-            <section key={categoria.nome} className="mb-8">
-              <h2 className="text-lg font-bold mb-4 text-brand-red pl-2">
-                {categoria.nome}
-              </h2>
+            <section key={categoria.nome} className="mb-12">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-[1px] flex-1 bg-[#C5A47E]/30"></div>
+                <h2 className="text-sm font-medium text-[#C5A47E] tracking-[0.18em] uppercase">
+                  {categoria.nome}
+                </h2>
+                <div className="h-[1px] flex-1 bg-[#C5A47E]/30"></div>
+              </div>
 
-              <div className="space-y-3">
-                {categoria.pratos.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400 pl-2">Nenhum produto nesta categoria.</p>
-                ) : (
-                  categoria.pratos.map((prato) => (
-                    <div
-                      key={prato.id}
-                      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden flex items-center p-3 gap-3"
-                    >
-                      <div className="flex-shrink-0 w-16 h-16 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 rounded">
-                           <Utensils size={24} />
+              <div className="space-y-4">
+                {categoria.pratos.map((prato) => (
+                  
+                  <div
+                    key={prato.id}
+                    className="bg-[#F7F4F0] p-4 rounded-xl border border-[#C5A47E]/20 shadow-sm hover:shadow-md hover:border-[#C5A47E]/40 transition-all duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      
+                      <div className="flex items-start flex-grow gap-4">
+                        <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-[#C5A47E]/15 text-[#6A0000]">
+                          <Utensils size={20} strokeWidth={1.5} />
+                        </div>
+                        
+                        <div className="flex-grow">
+                          <h3 className="text-[15px] font-semibold text-gray-900 tracking-wide leading-tight">
+                            {prato.nome_prato}
+                          </h3>
+                          
+                          {prato.descricao_prato && (
+                            <p className="text-sm text-gray-600 leading-snug font-normal mt-1">
+                              {prato.descricao_prato}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex-grow flex flex-col justify-between self-stretch">
-                        <div>
-                           <h3 className="text-base sm:text-lg font-semibold text-dark-text dark:text-light-text mb-1 line-clamp-2">
-                             {prato.nome_prato}
-                           </h3>
-                        </div>
-                        <p className="text-base sm:text-lg font-bold text-brand-red mt-1 self-end">
+                      <div className="flex-shrink-0">
+                        <p className="text-[15px] font-medium text-[#5A0000] whitespace-nowrap">
                           R$ {prato.valor_prato.toFixed(2).replace('.', ',')}
                         </p>
                       </div>
+
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </section>
           ))
@@ -142,4 +172,3 @@ export default async function CardapioPage({ params }: PageProps) {
     </div>
   );
 }
-

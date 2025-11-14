@@ -29,7 +29,6 @@ const Header = () => (
     
     <div className="relative z-20 container mx-auto px-8 flex-grow flex flex-col pt-6">
       
-      {/* Navbar: Sem linha e com espaçamento lateral (justify-between) */}
       <nav className="w-full flex justify-center items-center">
         <div className="hidden md:flex w-full justify-between items-center max-w-5xl mx-auto">
           <Link href="/" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Início</Link>
@@ -88,10 +87,10 @@ const FeatureCard = ({ icon: Icon, title, description }: { icon: React.ElementTy
 );
 
 const PricingCard = ({ title, price, features, recommended, isFree }: { title: string, price: string, features: string[], recommended?: boolean, isFree?: boolean }) => (
-  <div className={`flex flex-col p-8 bg-white transition-all duration-300 ${recommended ? 'shadow-2xl border-t-4 border-[#900000] scale-105 relative z-10' : 'border border-gray-200 hover:border-[#C5A47E] shadow-lg hover:shadow-xl'}`}>
+  <div className={`flex flex-col p-8 bg-white transition-all duration-300 ${recommended ? 'shadow-2xl border-t-4 border-[#510006] scale-105 relative z-10' : 'border border-gray-200 hover:border-[#C5A47E] shadow-lg hover:shadow-xl'}`}>
     {recommended && (
       <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-        <span className="bg-[#900000] text-white text-[10px] font-bold px-4 py-1 uppercase tracking-widest shadow-sm rounded-b">Recomendado</span>
+        <span className="bg-[#510006] text-white text-[10px] font-bold px-4 py-1 uppercase tracking-widest shadow-sm rounded-b">Recomendado</span>
       </div>
     )}
     <div className="text-center mb-6 pt-2">
@@ -111,7 +110,7 @@ const PricingCard = ({ title, price, features, recommended, isFree }: { title: s
         </li>
       ))}
     </ul>
-    <button className={`w-full py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-sm ${recommended ? 'bg-[#1a1a1a] text-white hover:bg-[#900000]' : 'bg-gray-100 text-gray-700 hover:bg-[#C5A47E] hover:text-white'}`}>
+    <button className={`w-full py-4 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-sm ${recommended ? 'bg-[#1a1a1a] text-white hover:bg-[#510006]' : 'bg-gray-100 text-gray-700 hover:bg-[#C5A47E] hover:text-white'}`}>
       {isFree ? 'Começar Teste' : 'Selecionar Plano'}
     </button>
   </div>
@@ -140,7 +139,7 @@ export default function Home() {
                 </h2>
               </div>
               <div className="hidden md:block pb-2">
-                <Link href="#contato" className="text-xs font-bold text-[#900000] uppercase tracking-widest flex items-center hover:opacity-70 transition-opacity">
+                <Link href="#contato" className="text-xs font-bold text-[#510006] uppercase tracking-widest flex items-center hover:opacity-70 transition-opacity">
                   Saiba Mais <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </div>
@@ -154,7 +153,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="servicos" className="py-24 bg-[#900000] text-white relative overflow-hidden">
+        <section id="servicos" className="py-24 bg-[#510006] text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent_50%)]"></div>
           <div className="container mx-auto px-8 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-16">
@@ -165,14 +164,14 @@ export default function Home() {
                    Centralize toda a operação do seu restaurante em uma única plataforma. Do momento em que o cliente senta à mesa até o fechamento do caixa, nossa tecnologia trabalha silenciosamente para garantir excelência.
                  </p>
                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/10 p-6 border border-white/10 backdrop-blur-sm rounded-sm">
-                      <h4 className="text-[#C5A47E] font-bold text-xl mb-1">40%</h4>
-                      <p className="text-[10px] uppercase tracking-widest text-white font-semibold">Mais Agilidade</p>
-                    </div>
-                    <div className="bg-white/10 p-6 border border-white/10 backdrop-blur-sm rounded-sm">
-                      <h4 className="text-[#C5A47E] font-bold text-xl mb-1">25%</h4>
-                      <p className="text-[10px] uppercase tracking-widest text-white font-semibold">Aumento no Ticket</p>
-                    </div>
+                   <div className="bg-white/10 p-6 border border-white/10 backdrop-blur-sm rounded-sm">
+                     <h4 className="text-[#C5A47E] font-bold text-xl mb-1">40%</h4>
+                     <p className="text-[10px] uppercase tracking-widest text-white font-semibold">Mais Agilidade</p>
+                   </div>
+                   <div className="bg-white/10 p-6 border border-white/10 backdrop-blur-sm rounded-sm">
+                     <h4 className="text-[#C5A47E] font-bold text-xl mb-1">25%</h4>
+                     <p className="text-[10px] uppercase tracking-widest text-white font-semibold">Aumento no Ticket</p>
+                   </div>
                  </div>
               </div>
               <div className="w-full md:w-1/2 flex justify-center">
@@ -190,7 +189,7 @@ export default function Home() {
         <section id="planos" className="py-24 bg-white border-t border-gray-200">
           <div className="container mx-auto px-8">
             <div className="text-center mb-16">
-              <span className="text-[#900000] font-bold tracking-[0.2em] text-[10px] uppercase mb-2 block">Investimento</span>
+              <span className="text-[#510006] font-bold tracking-[0.2em] text-[10px] uppercase mb-2 block">Investimento</span>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 uppercase tracking-wide">
                 Planos & Assinaturas
               </h2>
@@ -235,25 +234,25 @@ export default function Home() {
             </div>
 
             <div className="mt-16 text-center">
-              <Link href="#" className="inline-flex items-center text-xs font-bold text-gray-500 hover:text-[#900000] transition-colors uppercase tracking-widest group">
+              <Link href="#" className="inline-flex items-center text-xs font-bold text-gray-500 hover:text-[#510006] transition-colors uppercase tracking-widest group">
                 Comparar todos os recursos <ChevronRight className="ml-1 w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
         </section>
       </main>
-      <footer id="contato" className="bg-[#900000] text-white pt-20 pb-8 border-t border-white/10">
+      <footer id="contato" className="bg-[#510006] text-white pt-20 pb-8 border-t border-white/10">
         <div className="container mx-auto px-8">
           <div className="flex flex-col lg:flex-row justify-between gap-12 mb-16">
             
             <div className="lg:w-1/3 space-y-6">
               <div className="flex items-center gap-3">
                  <Image
-                    src="/logo.svg"
-                    alt="Logo Techbistro"
-                    width={30}
-                    height={30}
-                    className="filter brightness-150"
+                   src="/logo.svg"
+                   alt="Logo Techbistro"
+                   width={30}
+                   height={30}
+                   className="filter brightness-150"
                  />
                  <span className="text-2xl font-bold tracking-[0.2em] uppercase text-white">Techbistro</span>
               </div>

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../theme_provider.dart';
+import 'theme_controller.dart';
 import '../../settings/presentation/politica_privacidade.dart';
 import '../../settings/presentation/termos_uso.dart';
 import '../../settings/presentation/suporte.dart';

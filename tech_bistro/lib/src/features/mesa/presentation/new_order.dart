@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/ui/theme/app_colors.dart';
-import 'package:techbistro/theme_provider.dart';
+import 'package:techbistro/src/constants/app_colors.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
 class NewOrder extends StatefulWidget {
   final int idMesa;

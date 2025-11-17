@@ -5,7 +5,7 @@ import '../../mesa/presentation/mesa.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../cozinha/presentation/cozinha.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/ui/theme/app_colors.dart';
+import 'package:techbistro/src/constants/app_colors.dart';
 import 'pedidos_prontos.dart';
 import '../../administracao/presentation/users.dart';
 

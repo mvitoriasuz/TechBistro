@@ -118,9 +118,9 @@ const PricingCard = ({ title, price, features, recommended, isFree }: { title: s
 
 export default function Home() {
   const features = [
-    { icon: Smartphone, title: "Agilidade", description: "Reduza o tempo de espera com pedidos digitais instantâneos e intuitivos." },
-    { icon: UtensilsCrossed, title: "Produção", description: "Conexão direta com a cozinha, eliminando erros manuais e desperdícios." },
-    { icon: CreditCard, title: "Pagamentos", description: "Conciliação automática e múltiplas formas de pagamento integradas." },
+    { icon: Smartphone, title: "Agilidade", description: "Reduza o tempo de espera com pedidos digitais, instantâneos e intuitivos." },
+    { icon: UtensilsCrossed, title: "Produção", description: "Conexão direta com a cozinha, reduzindo erros manuais e desperdícios." },
+    { icon: CreditCard, title: "Pagamentos", description: "Sincronização automática e múltiplas formas de pagamento integradas" },
     { icon: BarChart3, title: "Gestão", description: "Dados precisos para tomadas de decisão estratégicas em tempo real." },
   ];
 
@@ -161,7 +161,7 @@ export default function Home() {
                  <span className="text-[#C5A47E] font-bold tracking-[0.2em] text-[10px] uppercase mb-3 block">Ecossistema</span>
                  <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight tracking-wide">Controle Total <br/><span className="text-white/60">do seu Negócio</span></h2>
                  <p className="text-gray-100 text-sm leading-loose mb-8 text-justify font-medium opacity-90">
-                   Centralize toda a operação do seu restaurante em uma única plataforma. Do momento em que o cliente senta à mesa até o fechamento do caixa, nossa tecnologia trabalha silenciosamente para garantir excelência.
+                   Centralize toda a operação do seu restaurante em uma única plataforma, proporcionando ao seu estabelecimento uma experiência transformadora e prática. Desde o primeiro atendimento até o encerramento do serviço, nossa tecnologia agrega eficiência, impacto e resultados positivos para o seu negócio.
                  </p>
                  <div className="grid grid-cols-2 gap-4">
                    <div className="bg-white/10 p-6 border border-white/10 backdrop-blur-sm rounded-sm">

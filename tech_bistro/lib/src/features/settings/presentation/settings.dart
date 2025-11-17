@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme_controller.dart';
 import '../../settings/presentation/politica_privacidade.dart';
 import '../../settings/presentation/termos_uso.dart';
 import '../../settings/presentation/suporte.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeProvider = ref.watch(themeControllerProvider);
     const Color primaryColor = Color(0xFF840011);
 
     return Scaffold(
@@ -68,7 +68,7 @@ class SettingsPage extends StatelessWidget {
             secondary: const Icon(Icons.dark_mode_outlined),
             value: themeProvider.isDarkMode,
             onChanged: (value) {
-              themeProvider.toggleTheme(value);
+              ref.read(themeControllerProvider.notifier).toggleTheme(value);
             },
           ),
           const Divider(),

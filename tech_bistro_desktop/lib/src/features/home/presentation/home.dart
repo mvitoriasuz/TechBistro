@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
+import '../../usuario/presentation/usuario.dart';
+import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,18 +27,15 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
       body: Row(
         children: [
-          // Sidebar fixa
+          // Sidebar
           Container(
             width: 220,
             color: AppColors.primaryDark,
             child: Column(
               children: [
                 const SizedBox(height: 50),
-                const Icon(
-                  Icons.restaurant_menu,
-                  color: AppColors.textLight,
-                  size: 50,
-                ),
+                const Icon(Icons.restaurant_menu,
+                    color: AppColors.textLight, size: 50),
                 const SizedBox(height: 10),
                 const Text(
                   'TechBistro',
@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Itens do menu
+                // Menu lateral
                 Expanded(
                   child: ListView.builder(
                     itemCount: menuItems.length,
@@ -57,27 +57,10 @@ class _HomePageState extends State<HomePage> {
                       return InkWell(
                         onTap: () {
                           setState(() => selectedIndex = index);
-                          // Navegação opcional com rotas nomeadas
-                          switch (index) {
-                            case 0:
-                              Navigator.pushNamed(context, '/usuario');
-                              break;
-                            case 1:
-                              Navigator.pushNamed(context, '/hierarquia');
-                              break;
-                            case 2:
-                              Navigator.pushNamed(context, '/cardapio');
-                              break;
-                            case 3:
-                              Navigator.pushNamed(context, '/relatorio');
-                              break;
-                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 15,
-                          ),
+                              horizontal: 20, vertical: 15),
                           color: isSelected
                               ? AppColors.primary.withOpacity(0.2)
                               : Colors.transparent,
@@ -113,13 +96,10 @@ class _HomePageState extends State<HomePage> {
 
                 const Divider(color: Colors.white24, height: 1),
 
-                //Botão sair
+                // Logout
                 ListTile(
-                  leading: const Icon(
-                    Icons.logout,
-                    color: Colors.redAccent,
-                    size: 22,
-                  ),
+                  leading: const Icon(Icons.logout,
+                      color: Colors.redAccent, size: 22),
                   title: const Text(
                     'Sair',
                     style: TextStyle(color: Colors.redAccent, fontSize: 15),
@@ -137,22 +117,33 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Container(
               color: AppColors.background,
-              child: Center(
-                child: Text(
-                  'Bem-vindo ao ${menuItems[selectedIndex]}',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ),
+              child: _buildContent(),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Troca de tela conforme clique no menu
+  Widget _buildContent() {
+    switch (selectedIndex) {
+      case 0:
+        return const UsuarioPage();
+      case 1:
+        return const HierarquiaForm();
+      case 2:
+        return const Center(
+            child:
+                Text("Tela de Cardápio", style: TextStyle(fontSize: 28)));
+      case 3:
+        return const Center(
+            child:
+                Text("Tela de Relatório", style: TextStyle(fontSize: 28)));
+      default:
+        return const Center(
+            child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)));
+    }
   }
 
   IconData _getIconForIndex(int index) {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tech_bistro_desktop/src/features/home/presentation/home.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -18,25 +20,33 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+ void _login() async {
+  if (!_formKey.currentState!.validate()) return;
 
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() => _isLoading = false);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      });
-    }
-  }
+  setState(() => _isLoading = true);
 
-  void _loginWithGoogle() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login com Google em desenvolvimento...')),
+  try {
+    final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
     );
+
+    if (authResponse.user != null) {
+      // Login OK → vai pra Home SEM redirecionar para fora do app
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao entrar: $e')),
+    );
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -93,17 +103,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      _buildTextField(
-                        controller: _cnpjController,
-                        label: 'CNPJ',
-                        icon: Icons.business,
-                        keyboardType: TextInputType.number,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Digite seu CNPJ';
-                          if (v.length < 14) return 'CNPJ inválido';
-                          return null;
-                        },
-                      ),
                       const SizedBox(height: 18),
                       _buildTextField(
                         controller: _emailController,
@@ -174,80 +173,6 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 25),
-
-                      // DIVISOR
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              color: AppColors.secondary.withOpacity(0.4),
-                              thickness: 1,
-                            ),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Text(
-                              'ou',
-                              style: TextStyle(
-                                fontFamily: 'Nats',
-                                color: AppColors.textDark.withOpacity(0.6),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              color: AppColors.secondary.withOpacity(0.4),
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 25),
-
-                      // BOTÃO GOOGLE
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: OutlinedButton.icon(
-                          icon: Image.asset(
-                            'assets/icons/google.png',
-                            height: 22,
-                          ),
-                          label: Text(
-                            'Entrar com Google',
-                            style: TextStyle(
-                              fontFamily: 'Nats',
-                              color: AppColors.textDark,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppColors.secondary),
-                            backgroundColor: AppColors.background,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _loginWithGoogle,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // ESQUECEU SENHA
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'Esqueceu sua senha?',
-                          style: TextStyle(
-                            fontFamily: 'Nats',
-                            color: AppColors.primaryDark,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

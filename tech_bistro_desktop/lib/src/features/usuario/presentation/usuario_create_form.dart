@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math';
 
 class UsuarioCreateForm extends StatefulWidget {
   final VoidCallback onCancel;
@@ -26,33 +27,61 @@ class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
 
   bool loading = false;
 
-  final List<Map<String, dynamic>> hierarquias = [
-    {'id': 1, 'nome': 'Admin'},
-    {'id': 2, 'nome': 'Garçom'},
-    {'id': 3, 'nome': 'Cozinha'},
-  ];
-
+  List<Map<String, dynamic>> hierarquias = [];
   int? hierarquiaSelecionada;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHierarquias();
+  }
+
+  Future<void> _loadHierarquias() async {
+    setState(() => loading = true);
+    try {
+      final response = await supabase.from('hierarquias').select();
+      hierarquias = List<Map<String, dynamic>>.from(response);
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erro ao carregar hierarquias")),
+      );
+    } finally {
+      setState(() => loading = false);
+    }
+  }
 
   Future<void> criarUsuario() async {
     if (!_formKey.currentState!.validate()) return;
+    if (hierarquiaSelecionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Selecione uma hierarquia")),
+      );
+      return;
+    }
 
     setState(() => loading = true);
 
     try {
-      final response = await supabase.from('users_profile').insert({
+      final nomeHierarquia = hierarquias
+          .firstWhere((h) => h['id'] == hierarquiaSelecionada)['nome'];
+
+      // Gerar código único se for Garçom ou Cozinha
+      String? codigoAcesso;
+      if (nomeHierarquia == "Garçom" || nomeHierarquia == "Cozinha") {
+        codigoAcesso = _gerarCodigoUnico();
+      }
+
+      await supabase.from('users_profile').insert({
         'name': displayName.text.trim(),
         'email': email.text.trim(),
-        'role': hierarquias.firstWhere((h) => h['id'] == hierarquiaSelecionada)['nome'],
         'phone': phone.text.trim(),
         'senha': senha.text.trim(),
         'hierarquia_id': hierarquiaSelecionada,
+        'role': nomeHierarquia,
+        'codigo_acesso': codigoAcesso, // novo campo
         'created_at': DateTime.now().toIso8601String(),
       });
-
-      if (response.isEmpty) {
-        throw "Falha ao inserir usuário.";
-      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Usuário criado com sucesso!")),
@@ -64,9 +93,16 @@ class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erro ao criar usuário: $e")),
       );
+    } finally {
+      setState(() => loading = false);
     }
+  }
 
-    setState(() => loading = false);
+  // Função para gerar código único de 6 caracteres
+  String _gerarCodigoUnico() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final rand = Random();
+    return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
   @override
@@ -80,34 +116,35 @@ class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Criar Usuário",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const Text(
+                "Criar Usuário",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 24),
-
               TextFormField(
                 controller: displayName,
                 decoration: const InputDecoration(labelText: "Nome"),
                 validator: (v) => v!.isEmpty ? "Informe o nome" : null,
               ),
-
+              const SizedBox(height: 16),
               TextFormField(
                 controller: email,
                 decoration: const InputDecoration(labelText: "Email"),
                 validator: (v) => v!.isEmpty ? "Informe o email" : null,
               ),
-
+              const SizedBox(height: 16),
               TextFormField(
                 controller: phone,
                 decoration: const InputDecoration(labelText: "Telefone"),
               ),
-
+              const SizedBox(height: 16),
               TextFormField(
                 controller: senha,
                 decoration: const InputDecoration(labelText: "Senha"),
                 obscureText: true,
                 validator: (v) => v!.isEmpty ? "Informe a senha" : null,
               ),
-
+              const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 value: hierarquiaSelecionada,
                 decoration: const InputDecoration(labelText: "Hierarquia"),
@@ -120,9 +157,7 @@ class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
                 onChanged: (v) => setState(() => hierarquiaSelecionada = v),
                 validator: (v) => v == null ? "Selecione uma hierarquia" : null,
               ),
-
               const SizedBox(height: 30),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -135,9 +170,9 @@ class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
                     child: loading
                         ? const CircularProgressIndicator()
                         : const Text("Salvar"),
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),

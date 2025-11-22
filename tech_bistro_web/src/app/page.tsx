@@ -119,7 +119,7 @@ const PricingCard = ({ title, price, features, recommended, isFree }: { title: s
 export default function Home() {
   const features = [
     { icon: Smartphone, title: "Agilidade", description: "Reduza o tempo de espera com pedidos digitais, instantâneos e intuitivos." },
-    { icon: UtensilsCrossed, title: "Produção", description: "Conexão direta com a cozinha, eliminando erros manuais e desperdícios." },
+    { icon: UtensilsCrossed, title: "Produção", description: "Conexão direta com a cozinha, reduzindo erros manuais e desperdícios." },
     { icon: CreditCard, title: "Pagamentos", description: "Sincronização automática e múltiplas formas de pagamento integradas." },
     { icon: BarChart3, title: "Gestão", description: "Dados precisos para tomadas de decisão estratégicas em tempo real." },
   ];

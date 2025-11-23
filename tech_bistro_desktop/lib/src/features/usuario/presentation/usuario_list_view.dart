@@ -25,16 +25,12 @@ class _UsuarioListViewState extends State<UsuarioListView> {
     setState(() => loading = true);
 
     try {
-      // Buscando usuários da tabela users_profile + hierarquia
       final response = await supabase
           .from('users_profile')
           .select(
             'id, name, email, phone, role, hierarquia_id, hierarquias(nome)',
           )
-          .order('created_at', ascending: true);
-
-      // Converte para List<Map<String, dynamic>>
-      usuarios = List<Map<String, dynamic>>.from(response as List);
+          .order('created_at');
 
       setState(() {
         usuarios = List<Map<String, dynamic>>.from(response);
@@ -73,19 +69,18 @@ class _UsuarioListViewState extends State<UsuarioListView> {
 
     if (confirm != true) return;
 
-    final response = await supabase.from('users_profile').delete().eq('id', id);
+    try {
+      await supabase.from('users_profile').delete().eq('id', id);
 
-    if (response.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erro ao excluir usuário: ${response.error!.message}"),
-        ),
-      );
-    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Usuário excluído com sucesso!")),
       );
+
       carregar();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erro ao excluir usuário: $e")),
+      );
     }
   }
 
@@ -96,20 +91,42 @@ class _UsuarioListViewState extends State<UsuarioListView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // TÍTULO + BOTÃO
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 "Usuários",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2A2A2A),
+                ),
               ),
+
               ElevatedButton(
                 onPressed: widget.onCreate,
-                child: const Text("Novo Usuário"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFA58570),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                ),
+                child: const Text(
+                  "Novo Usuário",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ],
           ),
+
           const SizedBox(height: 20),
+
           Expanded(
             child: loading
                 ? const Center(child: CircularProgressIndicator())

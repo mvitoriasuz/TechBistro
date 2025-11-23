@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'package:tech_bistro_desktop/src/features/home/presentation/home.dart';
-import 'src/features/cardapio/presentation/cardapio.dart';
 import 'src/features/dashboard/presentation/dashboard.dart';
 import 'src/features/hierarquia/presentation/hierarquia.dart';
 import 'src/features/usuario/presentation/usuario.dart';
@@ -28,7 +27,8 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       //depois precisa alterar para a tela de autenticação
-      home: AuthScreen(),
+      // home: AuthScreen(),
+      home: HomePage(),
     );
   }
 }

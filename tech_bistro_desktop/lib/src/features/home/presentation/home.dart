@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list_view.dart';
 import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
+import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia_list_view.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 import '../../usuario/presentation/usuario.dart';
 import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
@@ -34,11 +36,19 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 const SizedBox(height: 50),
-                const Icon(Icons.restaurant_menu,
-                    color: AppColors.textLight, size: 50),
+                Image.asset(
+                'assets/images/logo.png',
+                  height: 60,
+                  width: 60,
+                  errorBuilder: (context, error, stackTrace) {
+                    print(error); 
+                    return const Text("ERRO AO CARREGAR IMAGEM");
+                  },
+                ),
+
                 const SizedBox(height: 10),
                 const Text(
-                  'TechBistro',
+                  'Admin TechBistro',
                   style: TextStyle(
                     color: AppColors.textLight,
                     fontSize: 20,
@@ -60,7 +70,9 @@ class _HomePageState extends State<HomePage> {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 15),
+                            horizontal: 20,
+                            vertical: 15,
+                          ),
                           color: isSelected
                               ? AppColors.primary.withOpacity(0.2)
                               : Colors.transparent,
@@ -98,8 +110,11 @@ class _HomePageState extends State<HomePage> {
 
                 // Logout
                 ListTile(
-                  leading: const Icon(Icons.logout,
-                      color: Colors.redAccent, size: 22),
+                  leading: const Icon(
+                    Icons.logout,
+                    color: Colors.redAccent,
+                    size: 22,
+                  ),
                   title: const Text(
                     'Sair',
                     style: TextStyle(color: Colors.redAccent, fontSize: 15),
@@ -131,18 +146,17 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return const UsuarioPage();
       case 1:
-        return const HierarquiaForm();
+        return const HierarquiaListView();
       case 2:
-        return const Center(
-            child:
-                Text("Tela de Cardápio", style: TextStyle(fontSize: 28)));
+        return const PratoListView(idEstabelecimento: 1);  
       case 3:
         return const Center(
-            child:
-                Text("Tela de Relatório", style: TextStyle(fontSize: 28)));
+          child: Text("Tela de Relatório", style: TextStyle(fontSize: 28)),
+        );
       default:
         return const Center(
-            child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)));
+          child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)),
+        );
     }
   }
 

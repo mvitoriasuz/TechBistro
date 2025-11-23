@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -32,10 +33,25 @@ class _HierarquiaFormState extends State<HierarquiaForm> {
   @override
   void initState() {
     super.initState();
+
     if (widget.hierarquia != null) {
       nomeCtrl.text = widget.hierarquia!['nome'] ?? '';
-      final rawPerm = widget.hierarquia!['permissoes'] ?? {};
-      permissoes = {for (var e in rawPerm.entries) e.key: e.value == true};
+
+      final raw = widget.hierarquia!['permissoes'];
+
+      Map<String, dynamic> parsed = {};
+
+      if (raw is Map<String, dynamic>) {
+        parsed = raw;
+      } else if (raw is String) {
+        try {
+          parsed = Map<String, dynamic>.from(jsonDecode(raw));
+        } catch (e) {
+          print("Erro ao decodificar permissoes: $e");
+        }
+      }
+
+      permissoes = {for (var k in allPermissions.keys) k: parsed[k] == true};
     } else {
       permissoes = {for (var k in allPermissions.keys) k: false};
     }
@@ -84,9 +100,9 @@ class _HierarquiaFormState extends State<HierarquiaForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.hierarquia == null
-            ? "Nova hierarquia"
-            : "Editar hierarquia"),
+        title: Text(
+          widget.hierarquia == null ? "Nova hierarquia" : "Editar hierarquia",
+        ),
         actions: [
           IconButton(
             icon: loading
@@ -104,8 +120,9 @@ class _HierarquiaFormState extends State<HierarquiaForm> {
             TextField(
               controller: nomeCtrl,
               decoration: const InputDecoration(
-                  labelText: "Nome da hierarquia",
-                  border: OutlineInputBorder()),
+                labelText: "Nome da hierarquia",
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(

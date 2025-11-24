@@ -41,7 +41,6 @@ export async function generateMetadata(
     .single();
 
   if (error || !estabelecimentoData) {
-    console.error("Erro generateMetadata:", error);
     return {
       title: 'Cardápio não encontrado | Techbistro',
     };
@@ -63,7 +62,6 @@ export default async function CardapioPage({ params }: PageProps) {
     .single<Estabelecimento>();
 
   if (estabelecimentoError || !estabelecimento) {
-    console.error("Erro ao buscar estabelecimento:", estabelecimentoError);
     notFound();
   }
 
@@ -71,10 +69,6 @@ export default async function CardapioPage({ params }: PageProps) {
     .from('pratos')
     .select('id, nome_prato, valor_prato, categoria_prato, id_estabelecimento, descricao_prato')
     .eq('id_estabelecimento', idDoEstabelecimento);
-
-  if (pratosError) {
-    console.error("Erro detalhado ao buscar pratos:", pratosError);
-  }
 
   const listaDePratos = pratos ?? [];
 
@@ -92,9 +86,9 @@ export default async function CardapioPage({ params }: PageProps) {
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
-    <div className="min-h-screen bg-[#3B0A0A] font-sans selection:bg-[#C5A47E]/20">
+    <div className="min-h-screen bg-gradient-to-b from-[#510006] to-[#8C0010] font-sans selection:bg-[#C5A47E]/20">
       
-      <header className="bg-[#3B0A0A] text-white py-4 sticky top-0 z-50 border-b border-[#C5A47E]/20 shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
+      <header className="bg-[#510006] text-white py-4 sticky top-0 z-50 border-b border-[#C5A47E]/20 shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
         <div className="container mx-auto px-5 max-w-3xl flex items-center justify-between">
           <Image
             src="/logo.svg"

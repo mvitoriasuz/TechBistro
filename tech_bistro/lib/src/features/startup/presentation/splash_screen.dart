@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../auth/presentation/login_screen.dart';
 import '../../salao/presentation/salao.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,12 +14,27 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
+    _redirect();
+  }
+
+  Future<void> _redirect() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (!mounted) return;
+
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const SalaoPage()),
       );
-    });
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   @override

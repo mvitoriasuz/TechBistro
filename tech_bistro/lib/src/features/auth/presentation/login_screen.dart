@@ -32,15 +32,36 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final supabase = Supabase.instance.client;
+
+      final response = await supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SalaoPage()),
-        );
+      final user = response.user;
+      final hierarquia = user?.userMetadata?['hierarquia'];
+
+      final nivelAcesso = int.tryParse(hierarquia?.toString() ?? '0') ?? 0;
+
+      if (nivelAcesso == 1 || nivelAcesso == 2) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SalaoPage()),
+          );
+        }
+      } else {
+        await supabase.auth.signOut();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Acesso negado. Apenas gerentes e funcionários autorizados.'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } on AuthException catch (error) {
       if (mounted) {

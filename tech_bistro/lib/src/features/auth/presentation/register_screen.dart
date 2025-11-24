@@ -124,7 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'Crie sua conta',
+                  'CRIE SUA CONTA',
                   style: TextStyle(
                     fontFamily: 'Nats',
                     fontSize: 48,
@@ -214,7 +214,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 width: 1.5,
                               ),
                             ),
-                            helperText: 'Apenas números',
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {

@@ -7,7 +7,7 @@ import '../../cozinha/presentation/cozinha.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
 import 'pedidos_prontos.dart';
-import '../../administracao/presentation/users.dart';
+import '../../administracao/presentation/qr_code.dart';
 
 class SalaoPage extends StatefulWidget {
   const SalaoPage({super.key});

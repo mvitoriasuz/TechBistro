@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:tech_bistro/src/features/salao/presentation/salao.dart';
-import 'package:tech_bistro/src/features/cozinha/presentation/cozinha.dart';
-import 'package:tech_bistro/src/features/settings/presentation/settings.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:techbistro/src/features/salao/presentation/salao.dart';
+import 'package:techbistro/src/features/salao/presentation/pedidos_prontos.dart';
+import 'package:techbistro/src/features/settings/presentation/settings.dart';
+import 'package:techbistro/src/features/administracao/presentation/qr_code.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,45 +14,117 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
+  int _readyOrdersCount = 0;
+  StreamSubscription<List<Map<String, dynamic>>>? _readyOrdersSubscription;
 
   final List<Widget> _pages = [
-    const SalaoScreen(),
-    const CozinhaScreen(),
-    const SettingsScreen(),
+    const UsersPage(),
+    const SalaoPage(),
+    const PedidosProntosPage(),
+    const SettingsPage(),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _setupReadyOrdersRealtimeListener();
+  }
+
+  @override
+  void dispose() {
+    _readyOrdersSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchReadyOrdersCount() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('pedidos')
+          .select('id')
+          .eq('status_pedido', 'pronto');
+
+      if (response is List && mounted) {
+        setState(() {
+          _readyOrdersCount = response.length;
+        });
+      }
+    } catch (e) {
+      print('Erro ao buscar contagem de pedidos: $e');
+    }
+  }
+
+  void _setupReadyOrdersRealtimeListener() {
+    _fetchReadyOrdersCount();
+    _readyOrdersSubscription = Supabase.instance.client
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .listen(
+          (List<Map<String, dynamic>> data) {
+            _fetchReadyOrdersCount();
+          },
+          onError: (error) {
+            print('Erro no listener de pedidos: $error');
+          },
+        );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    const Color brandColor = Color(0xFF840011); 
+    
     return Scaffold(
-      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark 
-                ? const Color(0xFF1E1E1E) 
-                : Colors.white,
-            borderRadius: BorderRadius.circular(35),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
+      bottomNavigationBar: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.restaurant_menu_rounded, "Salão", 0),
-              _buildNavItem(Icons.soup_kitchen_rounded, "Cozinha", 1),
-              _buildNavItem(Icons.settings_rounded, "Ajustes", 2),
+              _buildModernNavItem(
+                icon: Icons.qr_code_scanner_rounded,
+                label: "QR Code",
+                index: 0,
+                activeColor: brandColor,
+              ),
+              
+              _buildModernNavItem(
+                icon: Icons.table_restaurant_rounded,
+                label: "Salão",
+                index: 1,
+                activeColor: brandColor,
+              ),
+
+              _buildModernNavItem(
+                icon: Icons.notifications_none_rounded,
+                activeIcon: Icons.notifications_active_rounded,
+                label: "Pedidos",
+                index: 2,
+                activeColor: brandColor,
+                badgeCount: _readyOrdersCount,
+              ),
+
+              _buildModernNavItem(
+                icon: Icons.settings_outlined,
+                activeIcon: Icons.settings_rounded,
+                label: "Ajustes",
+                index: 3,
+                activeColor: brandColor,
+              ),
             ],
           ),
         ),
@@ -57,50 +132,90 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildModernNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+    required Color activeColor,
+    IconData? activeIcon,
+    int badgeCount = 0,
+  }) {
     final bool isSelected = _currentIndex == index;
-    final primaryColor = Theme.of(context).primaryColor;
-    final contentColor = isSelected ? primaryColor : Colors.grey.withOpacity(0.5);
+    final IconData displayIcon = (isSelected && activeIcon != null) ? activeIcon : icon;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutQuad,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 10,
-          vertical: 10,
-        ),
-        decoration: isSelected
-            ? BoxDecoration(
-                color: primaryColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(25),
-              )
-            : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() => _currentIndex = index);
+        },
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: contentColor,
-              size: 26,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: contentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: 4,
+              width: isSelected ? 40 : 0,
+              decoration: BoxDecoration(
+                color: isSelected ? activeColor : Colors.transparent,
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
               ),
-            ],
+            ),
+            const Spacer(),
+
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedScale(
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    displayIcon,
+                    color: isSelected ? activeColor : Colors.grey.shade400,
+                    size: 28,
+                  ),
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -5,
+                    top: -5,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        badgeCount > 9 ? '9+' : '$badgeCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            
+            const SizedBox(height: 4),
+            
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? activeColor : Colors.grey.shade500,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            const Spacer(),
           ],
         ),
       ),

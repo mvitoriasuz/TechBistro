@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
+import 'package:techbistro/src/features/home/presentation/home_screen.dart';
 import 'package:techbistro/src/features/salao/presentation/salao.dart';
 import 'register_screen.dart';
 
@@ -47,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (nivelAcesso == 1 || nivelAcesso == 2) {
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SalaoPage()),
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
         }
       } else {

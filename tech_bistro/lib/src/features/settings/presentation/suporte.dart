@@ -82,8 +82,6 @@
           return;
         }
 
-        // Aqui você integraria com um serviço de backend para enviar o suporte
-        // Por exemplo, enviar para o Supabase, um e-mail, ou uma API de suporte.
         print('Tema Selecionado: $_selectedTopic');
         print('Descrição do Problema: ${_descriptionController.text}');
 

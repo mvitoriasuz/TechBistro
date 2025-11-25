@@ -44,7 +44,7 @@ class _NewOrderState extends State<NewOrder> {
           'prato principal': 1,
           'bebidas': 2,
           'sobremesas': 3,
-          'outros': 4, // Para outras categorias não especificadas
+          'outros': 4,
         };
 
         final ordemA = ordemPrioridade[a.toLowerCase()] ?? 999;

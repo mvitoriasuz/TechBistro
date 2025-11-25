@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
-import 'package:techbistro/src/features/salao/presentation/salao.dart'; // Importe SalaoPage
+import 'package:techbistro/src/features/salao/presentation/salao.dart';
 
 import 'new_order.dart';
 
@@ -469,7 +469,7 @@ class _MesaPageState extends State<MesaPage> {
                                                       .replaceAll(',', '.'));
 
                                               Navigator.pop(
-                                                  context); // Fecha o dialog de pagamento
+                                                  context);
 
                                               try {
                                                 await supabase

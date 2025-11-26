@@ -98,17 +98,31 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         automaticallyImplyLeading: false,
-        title: const Text(
-          'Cardápio Digital',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Nats',
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-            letterSpacing: 1.0,
-            shadows: [Shadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 2))],
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Cardápio Digital',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nats',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
+                ),
+              ),
+              Text(
+                'Link público do restaurante',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../cozinha/presentation/historico_entregues.dart';
@@ -16,15 +17,35 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
 
   List<dynamic> pedidosProntos = [];
   bool carregando = true;
+  StreamSubscription<List<Map<String, dynamic>>>? _pedidosSubscription;
 
   @override
   void initState() {
     super.initState();
     carregarPedidos();
+    _setupRealtimeListener();
+  }
+
+  @override
+  void dispose() {
+    _pedidosSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _setupRealtimeListener() {
+    _pedidosSubscription = supabase
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .listen((data) {
+      carregarPedidos();
+    });
   }
 
   Future<void> carregarPedidos() async {
-    setState(() => carregando = true);
+    if (pedidosProntos.isEmpty) {
+      setState(() => carregando = true);
+    }
+    
     try {
       final response = await supabase
           .from('pedidos')
@@ -85,7 +106,9 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
 
         if (mounted) {
           _showSnackBar('Pedido marcado como entregue');
-          carregarPedidos();
+          // A atualização via stream cuidará de remover o card, 
+          // mas chamamos carregarPedidos para garantir feedback imediato
+          carregarPedidos(); 
         }
       } catch (e) {
         if (mounted) {

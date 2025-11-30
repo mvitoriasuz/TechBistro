@@ -342,25 +342,55 @@ class _NewOrderState extends State<NewOrder> {
     return Scaffold(
       backgroundColor: backgroundApp,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Novo Pedido',
-              style: TextStyle(color: Colors.white, fontFamily: 'Nats', fontWeight: FontWeight.bold, fontSize: 24),
-            ),
-            Text(
-              'Mesa ${widget.idMesa}',
-              style: const TextStyle(color: Colors.white70, fontFamily: 'Nats', fontSize: 16),
-            ),
-          ],
-        ),
-        backgroundColor: primaryRed,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Novo Pedido',
+                style: TextStyle(
+                  color: primaryRed,
+                  fontFamily: 'Nats',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
+                ),
+              ),
+              Text(
+                'Mesa ${widget.idMesa}',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.close_rounded, color: primaryRed),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
       ),
       body: loading
           ? Center(child: CircularProgressIndicator(color: primaryRed))
@@ -382,7 +412,7 @@ class _NewOrderState extends State<NewOrder> {
     return Container(
       height: 60,
       width: double.infinity,
-      color: Colors.white,
+      color: Colors.transparent,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         scrollDirection: Axis.horizontal,
@@ -397,9 +427,12 @@ class _NewOrderState extends State<NewOrder> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? primaryRed : backgroundApp,
+                color: isSelected ? primaryRed : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: isSelected ? null : Border.all(color: Colors.grey.shade200),
+                boxShadow: isSelected 
+                  ? [BoxShadow(color: primaryRed.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
+                  : [],
               ),
               child: Text(
                 capitalize(categoria),

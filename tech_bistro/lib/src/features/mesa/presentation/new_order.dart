@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
-import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
 class NewOrder extends StatefulWidget {
   final int idMesa;
@@ -14,10 +13,16 @@ class NewOrder extends StatefulWidget {
 
 class _NewOrderState extends State<NewOrder> {
   final supabase = Supabase.instance.client;
+  
+  final Color primaryRed = const Color(0xFF840011);
+  final Color backgroundApp = const Color(0xFFF8F9FA);
+  final Color darkText = const Color(0xFF2D2D2D);
+
   Map<String, List<dynamic>> pratosPorCategoria = {};
   Map<int, int> quantidades = {};
   bool loading = true;
   List<String> categoriasOrdenadas = [];
+  String categoriaSelecionada = '';
 
   @override
   void initState() {
@@ -38,7 +43,6 @@ class _NewOrderState extends State<NewOrder> {
 
       List<String> todasCategorias = agrupados.keys.toList();
       todasCategorias.sort((a, b) {
-        // Nova ordem de prioridade
         const ordemPrioridade = {
           'entrada': 0,
           'prato principal': 1,
@@ -56,22 +60,30 @@ class _NewOrderState extends State<NewOrder> {
         return a.toLowerCase().compareTo(b.toLowerCase());
       });
 
-
       setState(() {
         pratosPorCategoria = agrupados;
         categoriasOrdenadas = todasCategorias;
+        if (categoriasOrdenadas.isNotEmpty) {
+          categoriaSelecionada = categoriasOrdenadas[0];
+        }
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-      _mostrarSnackBar('Erro ao carregar pratos: $e');
+      _mostrarSnackBar('Erro ao carregar pratos: $e', isError: true);
     }
   }
 
-  void _mostrarSnackBar(String mensagem) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensagem)));
+  void _mostrarSnackBar(String mensagem, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensagem, style: const TextStyle(fontFamily: 'Nats', fontWeight: FontWeight.bold)),
+        backgroundColor: isError ? primaryRed : Colors.green[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Future<void> _enviarPedido(
@@ -97,13 +109,12 @@ class _NewOrderState extends State<NewOrder> {
       _mostrarSnackBar('Pedido enviado com sucesso!');
       Navigator.pop(context);
     } catch (e) {
-      _mostrarSnackBar('Erro ao enviar pedido: $e');
+      _mostrarSnackBar('Erro ao enviar pedido: $e', isError: true);
     }
   }
 
   void _confirmarPedido() {
-    final pedidoFinal =
-        quantidades.entries.where((entry) => entry.value > 0).map((entry) {
+    final pedidoFinal = quantidades.entries.where((entry) => entry.value > 0).map((entry) {
       final prato = pratosPorCategoria.values
           .expand((x) => x)
           .firstWhere((p) => p['id'] == entry.key);
@@ -116,62 +127,29 @@ class _NewOrderState extends State<NewOrder> {
     }).toList();
 
     if (pedidoFinal.isEmpty) {
-      _showCenteredWarningDialog(
-        context,
-        'Adicione ao menos 1 item ao pedido.',
-      );
+      _showWarningDialog('Selecione ao menos um item.');
       return;
     }
 
-    _mostrarPopup(pedidoFinal);
+    _mostrarPopupConfirmacao(pedidoFinal);
   }
 
-  void _showCenteredWarningDialog(BuildContext context, String message) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final backgroundColor = theme.dialogTheme.backgroundColor ??
-        (isDark ? Colors.grey[850] : Colors.white);
-
+  void _showWarningDialog(String message) {
     showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          }
-        });
-
-        return AlertDialog(
-          backgroundColor: backgroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: Text(
-            'Atenção',
-            style: TextStyle(
-              fontFamily: 'Nats',
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.amber.shade200 : Colors.orange,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: Text(
-            message,
-            style: TextStyle(
-              fontSize: 18,
-              fontFamily: 'Nats',
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Icon(Icons.warning_amber_rounded, size: 40, color: Colors.orange[400]),
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontFamily: 'Nats', fontSize: 18, color: darkText),
+        ),
+      ),
     );
   }
 
-  void _mostrarPopup(List<Map<String, dynamic>> pedidoFinal) {
+  void _mostrarPopupConfirmacao(List<Map<String, dynamic>> pedidoFinal) {
     final alergicoController = TextEditingController();
     final obsAdicionaisController = TextEditingController();
     bool mostrarAlergico = false;
@@ -183,126 +161,118 @@ class _NewOrderState extends State<NewOrder> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: const Text(
-                'Informações Adicionais',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  fontFamily: 'Nats',
-                  color: Color(0xFF840011),
-                ),
-                textAlign: TextAlign.center,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Column(
+                children: [
+                  Text(
+                    'Revisão do Pedido',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      fontFamily: 'Nats',
+                      color: primaryRed,
+                    ),
+                  ),
+                  Text(
+                    'Adicione detalhes se necessário',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontFamily: 'Nats',
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => setState(
-                              () => mostrarAlergico = !mostrarAlergico,
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text(
-                              'ALÉRGICOS',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
+                          child: _buildActionButton(
+                            label: 'ALÉRGICOS',
+                            icon: Icons.no_food_outlined,
+                            isActive: mostrarAlergico,
+                            onTap: () => setState(() => mostrarAlergico = !mostrarAlergico),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => setState(() => mostrarObs = !mostrarObs),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text(
-                              'OBSERVAÇÕES',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
+                          child: _buildActionButton(
+                            label: 'OBSERVAÇÃO',
+                            icon: Icons.edit_note_rounded,
+                            isActive: mostrarObs,
+                            onTap: () => setState(() => mostrarObs = !mostrarObs),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    if (mostrarAlergico)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: TextField(
-                          controller: alergicoController,
-                          decoration: const InputDecoration(
-                            labelText: 'Informe alergias',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(8)),
-                            ),
-                            prefixIcon: Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                          ),
-                          maxLines: 2,
-                          minLines: 1,
-                        ),
-                      ),
-                    if (mostrarObs)
+                    
+                    if (mostrarAlergico) ...[
+                      const SizedBox(height: 16),
                       TextField(
-                        controller: obsAdicionaisController,
-                        decoration: const InputDecoration(
-                          labelText: 'Observações adicionais',
+                        controller: alergicoController,
+                        decoration: InputDecoration(
+                          hintText: 'Ex: Alergia a camarão, glúten...',
+                          labelText: 'Alergias',
+                          filled: true,
+                          fillColor: Colors.red[50],
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
-                          prefixIcon: Icon(Icons.notes, color: Colors.blueGrey),
+                          prefixIcon: const Icon(Icons.warning_amber_rounded, color: Colors.red),
                         ),
                         maxLines: 2,
                         minLines: 1,
                       ),
+                    ],
+
+                    if (mostrarObs) ...[
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: obsAdicionaisController,
+                        decoration: InputDecoration(
+                          hintText: 'Ex: Sem cebola, ponto da carne...',
+                          labelText: 'Observações Gerais',
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.notes, color: Colors.grey),
+                        ),
+                        maxLines: 2,
+                        minLines: 1,
+                      ),
+                    ],
                   ],
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Voltar', style: TextStyle(color: Colors.grey[600], fontSize: 16, fontFamily: 'Nats', fontWeight: FontWeight.bold)),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     final alergicos = alergicoController.text.trim();
                     final obs = obsAdicionaisController.text.trim();
-                    final observacao = obs.isEmpty ? null : obs;
-                    final alergia = alergicos.isEmpty ? null : alergicos;
-
                     _enviarPedido(
                       pedidoFinal,
-                      observacao,
-                      alergia,
+                      obs.isEmpty ? null : obs,
+                      alergicos.isEmpty ? null : alergicos,
                       widget.idMesa,
                     );
-                    Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF840011),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    backgroundColor: primaryRed,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  child: const Text('ENVIAR PEDIDO', style: TextStyle(color: Colors.white)),
+                  child: const Text('ENVIAR COZINHA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -312,237 +282,328 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
+  Widget _buildActionButton({required String label, required IconData icon, required bool isActive, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isActive ? primaryRed : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isActive ? primaryRed : Colors.grey.shade300),
+          boxShadow: [
+            if (!isActive)
+              BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isActive ? Colors.white : Colors.grey[600]),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.grey[600],
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
   }
 
+  int _getTotalItens() {
+    return quantidades.values.fold(0, (sum, qtd) => sum + qtd);
+  }
+
+  double _getValorTotal() {
+    double total = 0.0;
+    quantidades.forEach((id, qtd) {
+      if (qtd > 0) {
+        final prato = pratosPorCategoria.values
+            .expand((e) => e)
+            .firstWhere((p) => p['id'] == id);
+        total += (qtd * (prato['valor_prato'] as num).toDouble());
+      }
+    });
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
-    const Color appBarColor = Color(0xFF840011);
-
     return Scaffold(
+      backgroundColor: backgroundApp,
       appBar: AppBar(
-        title: const Text(
-          'Novo Pedido',
-          style: TextStyle(color: Colors.white, fontFamily: 'Nats'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Novo Pedido',
+              style: TextStyle(color: Colors.white, fontFamily: 'Nats', fontWeight: FontWeight.bold, fontSize: 24),
+            ),
+            Text(
+              'Mesa ${widget.idMesa}',
+              style: const TextStyle(color: Colors.white70, fontFamily: 'Nats', fontSize: 16),
+            ),
+          ],
         ),
-        backgroundColor: appBarColor,
+        backgroundColor: primaryRed,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: loading
-            ? const Center(child: CircularProgressIndicator())
-            : pratosPorCategoria.isEmpty
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
+      body: loading
+          ? Center(child: CircularProgressIndicator(color: primaryRed))
+          : Column(
+              children: [
+                _buildCategoriesSelector(),
+                Expanded(
+                  child: pratosPorCategoria.isEmpty
+                      ? _buildEmptyState()
+                      : _buildPratosList(),
+                ),
+                _buildBottomSummary(),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildCategoriesSelector() {
+    return Container(
+      height: 60,
+      width: double.infinity,
+      color: Colors.white,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        scrollDirection: Axis.horizontal,
+        itemCount: categoriasOrdenadas.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final categoria = categoriasOrdenadas[index];
+          final isSelected = categoria == categoriaSelecionada;
+          return GestureDetector(
+            onTap: () => setState(() => categoriaSelecionada = categoria),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? primaryRed : backgroundApp,
+                borderRadius: BorderRadius.circular(20),
+                border: isSelected ? null : Border.all(color: Colors.grey.shade200),
+              ),
+              child: Text(
+                capitalize(categoria),
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Nats',
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPratosList() {
+    final pratos = pratosPorCategoria[categoriaSelecionada] ?? [];
+    
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      itemCount: pratos.length,
+      itemBuilder: (context, index) {
+        final prato = pratos[index];
+        final id = prato['id'];
+        final qtd = quantidades[id] ?? 0;
+        final valor = (prato['valor_prato'] as num).toDouble();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: appBarColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                'PEDIDO MESA ${widget.idMesa}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontFamily: 'Nats',
-                                ),
-                              ),
-                            ),
-                          ),
+                      Text(
+                        prato['nome_prato'],
+                        style: TextStyle(
+                          fontFamily: 'Nats',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: darkText,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Nenhum pedido realizado.',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: PageView.builder(
-                          itemCount: categoriasOrdenadas.length,
-                          controller: PageController(viewportFraction: 0.95),
-                          itemBuilder: (context, index) {
-                            final categoria = categoriasOrdenadas[index];
-                            final pratos = pratosPorCategoria[categoria]!;
-
-                            return Card(
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      capitalize(categoria),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 25,
-                                        fontFamily: 'Nats',
-                                        color: Color(0xFF840011),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Expanded(
-                                      child: ListView.builder(
-                                        itemCount: pratos.length,
-                                        itemBuilder: (context, i) {
-                                          final prato = pratos[i];
-                                          final id = prato['id'];
-                                          final nome = prato['nome_prato'];
-                                          final valor = prato['valor_prato'];
-                                          final quantidade = quantidades[id] ?? 0;
-
-                                          return ListTile(
-                                            title: Text(
-                                              nome,
-                                              style: const TextStyle(
-                                                fontFamily: 'Nats',
-                                                fontSize: 21,
-                                              ),
-                                            ),
-                                            subtitle: Text(
-                                              'R\$ ${valor.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontFamily: 'Nats',
-                                                fontSize: 21,
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  124,
-                                                  118,
-                                                  118,
-                                                ),
-                                              ),
-                                            ),
-                                            trailing: Container(
-                                              width: 110,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey.shade100,
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                              ),
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.remove,
-                                                    ),
-                                                    color: const Color(
-                                                      0xFF840011,
-                                                    ),
-                                                    iconSize: 20,
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(
-                                                      minWidth: 30,
-                                                      minHeight: 30,
-                                                    ),
-                                                    onPressed: () {
-                                                      if (quantidade > 0) {
-                                                        setState(
-                                                          () =>
-                                                              quantidades[id] =
-                                                                  quantidade - 1,
-                                                        );
-                                                      }
-                                                    },
-                                                  ),
-                                                  Text(
-                                                    '$quantidade',
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontFamily: 'Nats',
-                                                    ),
-                                                  ),
-                                                  IconButton(
-                                                    icon: const Icon(Icons.add),
-                                                    color: const Color(
-                                                      0xFF840011,
-                                                    ),
-                                                    iconSize: 20,
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(
-                                                      minWidth: 30,
-                                                      minHeight: 30,
-                                                    ),
-                                                    onPressed: () {
-                                                      setState(
-                                                        () =>
-                                                              quantidades[id] =
-                                                                  quantidade + 1,
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.secondary,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onPressed: _confirmarPedido,
-                          child: const Text(
-                            'Finalizar pedido',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'R\$ ${valor.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontFamily: 'Nats',
+                          fontSize: 18,
+                          color: primaryRed,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: backgroundApp,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildQtyButton(Icons.remove, () {
+                        if (qtd > 0) setState(() => quantidades[id] = qtd - 1);
+                      }),
+                      Container(
+                        width: 30,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$qtd',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Nats',
+                            color: qtd > 0 ? primaryRed : Colors.grey,
+                          ),
+                        ),
+                      ),
+                      _buildQtyButton(Icons.add, () {
+                        setState(() => quantidades[id] = qtd + 1);
+                      }),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQtyButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, size: 20, color: primaryRed),
+      ),
+    );
+  }
+
+  Widget _buildBottomSummary() {
+    final int count = _getTotalItens();
+    final double total = _getValorTotal();
+
+    if (count == 0) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$count itens',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                ),
+                Text(
+                  'R\$ ${total.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: darkText,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    fontFamily: 'Nats',
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: _confirmarPedido,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryRed,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                elevation: 4,
+                shadowColor: primaryRed.withOpacity(0.4),
+              ),
+              child: const Row(
+                children: [
+                  Text(
+                    'Avançar',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.restaurant_menu_rounded, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            'Cardápio indisponível.',
+            style: TextStyle(color: Colors.grey[400], fontSize: 18, fontFamily: 'Nats'),
+          ),
+        ],
       ),
     );
   }

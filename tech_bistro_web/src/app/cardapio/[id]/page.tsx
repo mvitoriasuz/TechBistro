@@ -20,6 +20,7 @@ interface Prato {
   categoria_prato: string;
   id_estabelecimento: string;
   descricao_prato?: string;
+  imagem_url?: string | null;
 }
 
 interface CategoriaAgrupada {
@@ -67,7 +68,7 @@ export default async function CardapioPage({ params }: PageProps) {
 
   const { data: pratos, error: pratosError } = await supabase
     .from('pratos')
-    .select('id, nome_prato, valor_prato, categoria_prato, id_estabelecimento, descricao_prato')
+    .select('id, nome_prato, valor_prato, categoria_prato, id_estabelecimento, descricao_prato, imagem_url')
     .eq('id_estabelecimento', idDoEstabelecimento);
 
   const listaDePratos = pratos ?? [];
@@ -132,8 +133,26 @@ export default async function CardapioPage({ params }: PageProps) {
                     <div className="flex items-start justify-between gap-4">
                       
                       <div className="flex items-start flex-grow gap-4">
-                        <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-full bg-[#C5A47E]/15 text-[#6A0000]">
-                          <Utensils size={20} strokeWidth={1.5} />
+                        
+                        {/* LÓGICA DA IMAGEM ATUALIZADA:
+                            Se tiver imagem_url, exibe a imagem.
+                            Se não, exibe o ícone de talheres.
+                            Aumentei para w-20 h-20 (80px) para a foto ficar visível.
+                        */}
+                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                          {prato.imagem_url ? (
+                            <Image
+                              src={prato.imagem_url}
+                              alt={prato.nome_prato}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#C5A47E]/15 text-[#6A0000]">
+                              <Utensils size={24} strokeWidth={1.5} />
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex-grow">
@@ -142,14 +161,14 @@ export default async function CardapioPage({ params }: PageProps) {
                           </h3>
                           
                           {prato.descricao_prato && (
-                            <p className="text-sm text-gray-600 leading-snug font-normal mt-1">
+                            <p className="text-sm text-gray-600 leading-snug font-normal mt-1 line-clamp-3">
                               {prato.descricao_prato}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 pt-1">
                         <p className="text-[15px] font-medium text-[#5A0000] whitespace-nowrap">
                           R$ {prato.valor_prato.toFixed(2).replace('.', ',')}
                         </p>

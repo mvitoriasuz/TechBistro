@@ -106,8 +106,6 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
 
         if (mounted) {
           _showSnackBar('Pedido marcado como entregue');
-          // A atualização via stream cuidará de remover o card, 
-          // mas chamamos carregarPedidos para garantir feedback imediato
           carregarPedidos(); 
         }
       } catch (e) {

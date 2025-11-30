@@ -1,6 +1,5 @@
     import 'package:flutter/material.dart';
 
-    // Placeholder para a tela de Histórico de Suporte
     class HistoricoSuportePage extends StatelessWidget {
       const HistoricoSuportePage({super.key});
 
@@ -92,7 +91,6 @@
           ),
         );
 
-        // Limpar campos após o envio
         setState(() {
           _selectedTopic = null;
           _descriptionController.clear();

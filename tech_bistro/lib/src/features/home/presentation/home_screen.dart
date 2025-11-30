@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/features/salao/presentation/salao.dart';
 import 'package:techbistro/src/features/salao/presentation/pedidos_prontos.dart';
 import 'package:techbistro/src/features/settings/presentation/settings.dart';
-import 'package:techbistro/src/features/administracao/presentation/qr_code.dart';
+import 'package:techbistro/src/features/cardapio/presentation/qr_code.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

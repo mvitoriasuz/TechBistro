@@ -550,118 +550,150 @@ class _MesaPageState extends State<MesaPage> {
   void _showPaymentDialog(double valorPendente) {
     final TextEditingController valorController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    String formaPagamento = 'Crédito';
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: primaryRed.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.payments_rounded, size: 32, color: primaryRed),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'Registrar Pagamento',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Nats',
-                    color: primaryRed,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Falta pagar: R\$ ${valorPendente.toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: valorController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  decoration: InputDecoration(
-                    hintText: '0.00',
-                    prefixText: 'R\$ ',
-                    filled: true,
-                    fillColor: backgroundApp,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                  ),
-                  validator: (value) {
-                    final parsed = double.tryParse(value?.replaceAll(',', '.') ?? '');
-                    if (parsed == null || parsed <= 0) return 'Valor inválido';
-                    if (parsed > valorPendente + 0.01) return 'Valor excede o restante';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                        child: Text('Cancelar', style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (!formKey.currentState!.validate()) return;
-                          final valor = double.parse(valorController.text.replaceAll(',', '.'));
-                          Navigator.pop(context);
-                          await _processPayment(valor);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryRed,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          elevation: 0,
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: primaryRed.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                        child: const Text('CONFIRMAR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: Icon(Icons.payments_rounded, size: 32, color: primaryRed),
                       ),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Registrar Pagamento',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Nats',
+                          color: primaryRed,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Falta pagar: R\$ ${valorPendente.toStringAsFixed(2)}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                      ),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        controller: valorController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          prefixText: 'R\$ ',
+                          filled: true,
+                          fillColor: backgroundApp,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        ),
+                        validator: (value) {
+                          final parsed = double.tryParse(value?.replaceAll(',', '.') ?? '');
+                          if (parsed == null || parsed <= 0) return 'Valor inválido';
+                          if (parsed > valorPendente + 0.01) return 'Valor excede o restante';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: formaPagamento,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: backgroundApp,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        ),
+                        items: ['Crédito', 'Débito', 'Dinheiro', 'PIX']
+                            .map((label) => DropdownMenuItem(
+                                  value: label,
+                                  child: Text(label),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            formaPagamento = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                              child: Text('Cancelar', style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (!formKey.currentState!.validate()) return;
+                                final valor = double.parse(valorController.text.replaceAll(',', '.'));
+                                Navigator.pop(context);
+                                await _processPayment(valor, formaPagamento);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryRed,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                elevation: 0,
+                              ),
+                              child: const Text('CONFIRMAR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Future<void> _processPayment(double valor) async {
+  Future<void> _processPayment(double valor, String formaPagamento) async {
     try {
       await supabase.from('pagamento').insert({
         'id_mesa': widget.numeroMesa,
         'valor_pagamento': valor,
+        'forma_pagamento': formaPagamento,
       });
       await fetchPedidos();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Pagamento de R\$ ${valor.toStringAsFixed(2)} registrado!'),
+            content: Text('Pagamento de R\$ ${valor.toStringAsFixed(2)} ($formaPagamento) registrado!'),
             backgroundColor: successGreen,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -123,6 +123,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                SizedBox(
+                  height: 120,
+                  child: Image.asset(
+                    'assets/branco.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 const Text(
                   'CRIE SUA CONTA',
                   style: TextStyle(

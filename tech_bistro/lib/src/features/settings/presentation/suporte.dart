@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme_controller.dart';
 
 class HistoricoSuportePage extends ConsumerWidget {
@@ -14,72 +15,107 @@ class HistoricoSuportePage extends ConsumerWidget {
     final Color primaryRed = const Color(0xFF840011);
     final Color darkRed = const Color(0xFF510006);
     final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
+    final List<Color> gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
 
     return Scaffold(
       backgroundColor: backgroundColor,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Histórico',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nats',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
+                ),
+              ),
+              Text(
+                'Seus chamados anteriores',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.close_rounded, color: primaryRed),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           Container(
-            height: 280,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isDark 
-                    ? [Colors.black, const Color(0xFF300000)] 
-                    : [darkRed, primaryRed],
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+                colors: gradientColors,
               ),
             ),
           ),
           
+          Positioned(
+            top: -60,
+            right: -60,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 40,
+            left: -40,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Histórico',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Nats',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 34,
-                              ),
-                            ),
-                            Text(
-                              'Seus chamados anteriores',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(height: 20),
                 Expanded(
                   child: Center(
                     child: Column(
@@ -106,7 +142,7 @@ class HistoricoSuportePage extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: textColor,
+                            color: Colors.white,
                             fontFamily: 'Nats',
                           ),
                         ),
@@ -133,6 +169,7 @@ class SuportePage extends ConsumerStatefulWidget {
 class _SuportePageState extends ConsumerState<SuportePage> {
   String? _selectedTopic;
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isLoading = false;
 
   final List<String> _supportTopics = [
     'Problema Técnico',
@@ -148,7 +185,7 @@ class _SuportePageState extends ConsumerState<SuportePage> {
     super.dispose();
   }
 
-  void _submitSupportRequest() {
+  Future<void> _submitSupportRequest() async {
     if (_selectedTopic == null || _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -161,25 +198,53 @@ class _SuportePageState extends ConsumerState<SuportePage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Solicitação enviada!', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        backgroundColor: Colors.green[600],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    setState(() => _isLoading = true);
 
-    setState(() {
-      _selectedTopic = null;
-      _descriptionController.clear();
-    });
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      
+      await Supabase.instance.client.from('suporte_chamados').insert({
+        'user_id': user?.id,
+        'topico': _selectedTopic,
+        'descricao': _descriptionController.text.trim(),
+        'status': 'pendente',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Solicitação enviada com sucesso!', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            backgroundColor: Colors.green[600],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+
+        setState(() {
+          _selectedTopic = null;
+          _descriptionController.clear();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao enviar: $e', style: const TextStyle(color: Colors.white)),
+            backgroundColor: const Color(0xFF840011),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -194,31 +259,98 @@ class _SuportePageState extends ConsumerState<SuportePage> {
     final Color darkRed = const Color(0xFF510006);
     final Color inputFill = isDark ? const Color(0xFF2C2C2C) : Colors.grey[50]!;
 
+    final List<Color> gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
+
     return Scaffold(
       backgroundColor: backgroundColor,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Suporte',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nats',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
+                ),
+              ),
+              Text(
+                'Como podemos ajudar?',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.history_rounded, color: primaryRed),
+              tooltip: 'Histórico',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HistoricoSuportePage()),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 8, right: 16),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(Icons.close_rounded, color: primaryRed),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           Container(
-            height: 280,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isDark 
-                    ? [Colors.black, const Color(0xFF300000)] 
-                    : [darkRed, primaryRed],
+                colors: gradientColors,
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.5 : 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
             ),
           ),
 
@@ -234,72 +366,23 @@ class _SuportePageState extends ConsumerState<SuportePage> {
               ),
             ),
           ),
+          Positioned(
+            top: 40,
+            left: -40,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
+            ),
+          ),
 
           SafeArea(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Suporte',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Nats',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 34,
-                              ),
-                            ),
-                            Text(
-                              'Como podemos ajudar?',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.history_rounded, color: Colors.white),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const HistoricoSuportePage()),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.close_rounded, color: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
+                const SizedBox(height: 20),
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -389,29 +472,35 @@ class _SuportePageState extends ConsumerState<SuportePage> {
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _submitSupportRequest,
+                              onPressed: _isLoading ? null : _submitSupportRequest,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primaryRed,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 elevation: 5,
                                 shadowColor: primaryRed.withOpacity(0.4),
                               ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'ENVIAR SOLICITAÇÃO',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1.0,
-                                    ),
+                              child: _isLoading 
+                                ? const SizedBox(
+                                    width: 24, 
+                                    height: 24, 
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'ENVIAR SOLICITAÇÃO',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                                    ],
                                   ),
-                                  SizedBox(width: 12),
-                                  Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                                ],
-                              ),
                             ),
                           ),
                         ],

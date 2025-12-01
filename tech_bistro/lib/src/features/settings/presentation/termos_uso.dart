@@ -1,163 +1,226 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'theme_controller.dart';
 
-class TermosUsoPage extends StatelessWidget {
+class TermosUsoPage extends ConsumerWidget {
   const TermosUsoPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF840011);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Termos de Serviço",
-          style: TextStyle(color: Colors.white, fontFamily: 'Nats'),
-        ),
-        backgroundColor: primaryColor,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-          color: Colors.white,
-        ),
+      backgroundColor: backgroundColor,
+      body: Stack(
+        children: [
+          Container(
+            height: 280,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                    ? [Colors.black, const Color(0xFF300000)] 
+                    : [darkRed, primaryRed],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.5 : 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+          ),
+
+          Positioned(
+            top: -60,
+            left: -60,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.03),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Termos de Uso',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Nats',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 34,
+                              ),
+                            ),
+                            Text(
+                              'Regras e condições',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.close_rounded, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                      child: ListView(
+                        padding: const EdgeInsets.all(24),
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: primaryRed.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.gavel_rounded, color: primaryRed, size: 30),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildSection(
+                            '1. Aceitação',
+                            'Ao utilizar o aplicativo Tech Bistro, você concorda com estes Termos de Serviço. Caso não concorde, recomendamos não utilizar o aplicativo.',
+                            textColor, subtitleColor,
+                          ),
+                          _buildDivider(isDark),
+
+                          _buildSection(
+                            '2. O Serviço',
+                            'O Tech Bistro facilita:\n• Registro de pedidos\n• Comunicação interna\n• Sinalização de alergias\n• Controle de comandas',
+                            textColor, subtitleColor,
+                          ),
+                          _buildDivider(isDark),
+
+                          _buildSection(
+                            '3. Responsabilidades',
+                            'Você se compromete a usar o sistema de forma ética, fornecer informações corretas e não violar normas do restaurante.',
+                            textColor, subtitleColor,
+                          ),
+                          _buildDivider(isDark),
+
+                          _buildSection(
+                            '4. Alergias',
+                            'A responsabilidade por inserir informações de alergia corretamente é do usuário. O app não se responsabiliza por omissões.',
+                            textColor, subtitleColor,
+                          ),
+                          _buildDivider(isDark),
+
+                          _buildSection(
+                            '5. Propriedade Intelectual',
+                            'Todos os direitos de design e funcionalidades são protegidos. É proibida a reprodução sem autorização.',
+                            textColor, subtitleColor,
+                          ),
+
+                          const SizedBox(height: 30),
+                          Center(
+                            child: Text(
+                              'Versão 1.0.0',
+                              style: TextStyle(color: subtitleColor, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Termos de Serviço – TechBistro',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-                fontFamily: 'Nats',
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              '1. Aceitação dos Termos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Ao utilizar o aplicativo Tech Bistro, você concorda com estes Termos de Serviço e com a Política de Privacidade aplicável. Caso não concorde com qualquer parte destes termos, recomendamos que não utilize o aplicativo.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '2. Descrição do Serviço',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'O Tech Bistro é um sistema desenvolvido para uso interno de restaurantes, com o objetivo de facilitar:\n'
-              'O registro e o gerenciamento de pedidos realizados nas mesas;\n'
-              'A comunicação eficiente entre a equipe do salão e da cozinha;\n'
-              'A sinalização de alergias, restrições alimentares e observação nos pedidos;\n'
-              'A organização e controle de comandas e pagamentos.\n\n'
-              'O app é destinado para uso profissional em estabelecimentos alimentícios.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '3. Responsabilidades dos Usuários',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Ao utilizar o aplicativo, você se compromete a:\n'
-              'Utilizar o sistema de forma ética e responsável;\n'
-              'Fornecer informações corretas ao registrar pedidos e observações;\n'
-              'Respeitar os direitos de outros usuários e colaboradores;\n'
-              'Não utilizar o aplicativo para fins ilegais, ofensivos ou que violem normas do restaurante.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '4. Informações sobre Alergias',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'O Tech Bistro permite o registro de alergias e restrições alimentares nos pedidos. No entanto, a responsabilidade por inserir essas informações corretamente é do usuário (cliente ou funcionário que registra o pedido). O restaurante e o aplicativo não se responsabilizam por omissões ou erros no preenchimento desses dados.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '5. Disponibilidade e Manutenção',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'O Tech Bistro poderá passar por atualizações ou manutenções sem aviso prévio. Embora busquemos garantir o funcionamento contínuo, não garantimos que o serviço esteja livre de falhas o tempo todo.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '6. Propriedade Intelectual',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Todos os direitos relacionados à marca, design, layout e funcionalidades do Tech Bistro são protegidos por leis de propriedade intelectual. É proibida a reprodução total ou parcial sem autorização.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '7. Alterações nos Termos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Nos reservamos no direito de modificar estes Termos de Serviço a qualquer momento. Alterações importantes serão comunicadas dentro do próprio aplicativo.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 15),
-            Text(
-              '8. Contato e Suporte',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Dúvidas ou sugestões podem ser encaminhadas para a equipe técnica responsável ou para a administração do restaurante.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-          ],
+    );
+  }
+
+  Widget _buildSection(String title, String content, Color titleColor, Color contentColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: titleColor,
+            fontFamily: 'Nats',
+          ),
         ),
+        const SizedBox(height: 8),
+        Text(
+          content,
+          style: TextStyle(
+            fontSize: 15,
+            color: contentColor,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Divider(
+        color: isDark ? Colors.grey[800] : Colors.grey[200],
+        thickness: 1,
       ),
     );
   }

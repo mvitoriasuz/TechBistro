@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme_controller.dart';
-import '../../settings/presentation/politica_privacidade.dart';
-import '../../settings/presentation/termos_uso.dart';
-import '../../settings/presentation/suporte.dart';
+import 'politica_privacidade.dart';
+import 'termos_uso.dart';
+import 'suporte.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -11,296 +12,331 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color iconColor = isDark ? Colors.white70 : primaryRed;
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final Color dividerColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
+
+    final user = Supabase.instance.client.auth.currentUser;
+    final String userEmail = user?.email ?? 'email@techbistro.com';
     
-    const Color primaryColor = Color(0xFF840011);
-    const Color darkRed = Color(0xFF510006);
-    const Color backgroundColor = Color(0xFFF5F5F5);
+    String userName = 'Usuário TechBistro';
+    if (user != null && user.userMetadata != null) {
+      final meta = user.userMetadata!;
+      if (meta['nome'] != null && meta['nome'].toString().isNotEmpty) {
+        userName = meta['nome'];
+      } else if (meta['name'] != null && meta['name'].toString().isNotEmpty) {
+        userName = meta['name'];
+      } else if (meta['full_name'] != null && meta['full_name'].toString().isNotEmpty) {
+        userName = meta['full_name'];
+      } else {
+        final emailName = userEmail.split('@').first;
+        userName = emailName[0].toUpperCase() + emailName.substring(1);
+      }
+    }
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        title: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Ajustes Gerais',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Nats',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 34,
-                ),
-              ),
-              Text(
-                'Personalize sua experiência',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
       body: Stack(
         children: [
           Container(
-            height: 280,
-            decoration: const BoxDecoration(
+            height: 300,
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [darkRed, primaryColor],
+                colors: isDark 
+                    ? [Colors.black, const Color(0xFF300000)] 
+                    : [darkRed, primaryRed],
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
               ),
             ),
           ),
-          
+
           Positioned(
-            top: -100,
-            right: -50,
+            top: -60,
+            right: -60,
             child: Container(
-              width: 300,
-              height: 300,
+              width: 250,
+              height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withOpacity(0.03),
               ),
             ),
           ),
           Positioned(
-            top: 100,
-            left: -50,
+            top: 40,
+            left: -40,
             child: Container(
               width: 150,
               height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.white.withOpacity(0.03),
               ),
             ),
           ),
 
-          Column(
-            children: [
-              const SafeArea(
-                bottom: false,
-                child: SizedBox(height: 60),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const CircleAvatar(
-                          radius: 28,
-                          backgroundColor: primaryColor,
-                          child: Icon(Icons.person, size: 32, color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Nome do Usuário',
+                              'Ajustes Gerais',
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 fontFamily: 'Nats',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 34,
                               ),
                             ),
                             Text(
-                              'usuario@restaurante.com',
+                              'Personalize sua experiência',
                               style: TextStyle(
-                                fontSize: 14,
                                 color: Colors.white.withOpacity(0.8),
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                fontFamily: 'Nats',
                               ),
                             ),
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, color: Colors.white),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Editar perfil em breve.')),
-                          );
-                        },
-                      )
                     ],
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
-
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, -5),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      children: [
-                        _buildSectionHeader('APARÊNCIA', primaryColor),
-                        _buildSettingsTile(
-                          icon: Icons.dark_mode_outlined,
-                          title: "Modo Escuro",
-                          trailing: Switch(
-                            value: themeProvider.isDarkMode,
-                            activeColor: primaryColor,
-                            onChanged: (value) {
-                              ref.read(themeControllerProvider.notifier).toggleTheme(value);
-                            },
-                          ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-
-                        _buildDivider(),
-                        _buildSectionHeader('NOTIFICAÇÕES', primaryColor),
-                        
-                        _buildSettingsTile(
-                          icon: Icons.notifications_active_outlined,
-                          title: "Ativar Notificações",
-                          trailing: Switch(
-                            value: true,
-                            activeColor: primaryColor,
-                            onChanged: (val) {},
-                          ),
-                        ),
-                        _buildSettingsTile(
-                          icon: Icons.volume_up_outlined,
-                          title: "Sons de Alerta",
-                          trailing: Switch(
-                            value: false,
-                            activeColor: primaryColor,
-                            onChanged: (val) {},
-                          ),
-                        ),
-
-                        _buildDivider(),
-                        _buildSectionHeader('GERAL', primaryColor),
-
-                        _buildSettingsTile(
-                          icon: Icons.language,
-                          title: "Idioma",
-                          subtitle: "Português (Brasil)",
-                          onTap: () {},
-                        ),
-                        _buildSettingsTile(
-                          icon: Icons.headset_mic_outlined,
-                          title: "Suporte e Ajuda",
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SuportePage()),
-                          ),
-                        ),
-
-                        _buildDivider(),
-                        _buildSectionHeader('SOBRE', primaryColor),
-
-                        _buildSettingsTile(
-                          icon: Icons.info_outline_rounded,
-                          title: "Versão do App",
-                          subtitle: "1.0.0 (Beta)",
-                        ),
-                        _buildSettingsTile(
-                          icon: Icons.privacy_tip_outlined,
-                          title: "Política de Privacidade",
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const PoliticaPrivacidadePage()),
-                          ),
-                        ),
-                        _buildSettingsTile(
-                          icon: Icons.description_outlined,
-                          title: "Termos de Uso",
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const TermosUsoPage()),
-                          ),
-                        ),
-
-                        const SizedBox(height: 30),
-                        
-                        Center(
-                          child: Column(
-                            children: [
-                              Text(
-                                "Desenvolvido por",
-                                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF333333) : Colors.grey[100],
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Bruno • Maria Vitoria • Rafaela",
-                                style: TextStyle(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                              child: CircleAvatar(
+                                radius: 30,
+                                backgroundColor: primaryRed,
+                                child: Text(
+                                  userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'Nats',
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userName,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                      fontFamily: 'Nats',
+                                    ),
+                                  ),
+                                  Text(
+                                    userEmail,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: subtitleColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.logout_rounded, color: primaryRed),
+                              tooltip: 'Sair',
+                              onPressed: () async {
+                                await Supabase.instance.client.auth.signOut();
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      _buildSectionHeader('PREFERÊNCIAS', isDark),
+                      _buildSettingsContainer(
+                        surfaceColor,
+                        [
+                          _buildSwitchTile(
+                            title: 'Modo Escuro',
+                            icon: isDark ? Icons.dark_mode : Icons.light_mode,
+                            value: isDark,
+                            activeColor: primaryRed,
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                            onChanged: (val) => ref.read(themeControllerProvider.notifier).toggleTheme(val),
+                          ),
+                          _buildDivider(dividerColor),
+                          _buildSwitchTile(
+                            title: 'Notificações',
+                            icon: Icons.notifications_none_rounded,
+                            value: true,
+                            activeColor: primaryRed,
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                            onChanged: (val) {},
+                          ),
+                        ],
+                        isDark,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _buildSectionHeader('SUPORTE', isDark),
+                      _buildSettingsContainer(
+                        surfaceColor,
+                        [
+                          _buildNavTile(
+                            title: 'Central de Ajuda',
+                            icon: Icons.headset_mic_outlined,
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                            arrowColor: subtitleColor,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SuportePage()),
+                            ),
+                          ),
+                        ],
+                        isDark,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _buildSectionHeader('SOBRE', isDark),
+                      _buildSettingsContainer(
+                        surfaceColor,
+                        [
+                          _buildNavTile(
+                            title: 'Política de Privacidade',
+                            icon: Icons.privacy_tip_outlined,
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                            arrowColor: subtitleColor,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const PoliticaPrivacidadePage()),
+                            ),
+                          ),
+                          _buildDivider(dividerColor),
+                          _buildNavTile(
+                            title: 'Termos de Uso',
+                            icon: Icons.description_outlined,
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                            arrowColor: subtitleColor,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const TermosUsoPage()),
+                            ),
+                          ),
+                          _buildDivider(dividerColor),
+                          _buildInfoTile(
+                            title: 'Versão do App',
+                            icon: Icons.info_outline_rounded,
+                            value: '1.0.0 (Beta)',
+                            textColor: textColor,
+                            iconColor: iconColor,
+                            valueColor: subtitleColor,
+                            tileColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!,
+                          ),
+                        ],
+                        isDark,
+                      ),
+
+                      const SizedBox(height: 40),
+                      
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              'TechBistro',
+                              style: TextStyle(
+                                color: subtitleColor,
+                                fontFamily: 'Nats',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            Text(
+                              'Desenvolvido por Bruno, Maria Vitoria e Rafaela',
+                              style: TextStyle(color: subtitleColor.withOpacity(0.7), fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 16, bottom: 8),
       child: Text(
         title,
         style: TextStyle(
-          color: color.withOpacity(0.8),
+          color: isDark ? Colors.grey[400] : const Color(0xFF840011),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
@@ -309,45 +345,138 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: const Color(0xFF8C0010), size: 22),
+  Widget _buildSettingsContainer(Color color, List<Widget> children, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-          color: Color(0xFF333333),
-        ),
+      child: Column(
+        children: children,
       ),
-      subtitle: subtitle != null
-          ? Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 13))
-          : null,
-      trailing: trailing ?? (onTap != null 
-          ? const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey) 
-          : null),
-      onTap: onTap,
     );
   }
 
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Divider(color: Colors.grey[200], height: 1),
+  Widget _buildSwitchTile({
+    required String title,
+    required IconData icon,
+    required bool value,
+    required Color activeColor,
+    required Color textColor,
+    required Color iconColor,
+    required Color tileColor,
+    required Function(bool) onChanged,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: tileColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      trailing: Switch(
+        value: value,
+        activeColor: activeColor,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildNavTile({
+    required String title,
+    required IconData icon,
+    required Color textColor,
+    required Color iconColor,
+    required Color tileColor,
+    required Color arrowColor,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: tileColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: arrowColor),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required String title,
+    required IconData icon,
+    required String value,
+    required Color textColor,
+    required Color iconColor,
+    required Color valueColor,
+    required Color tileColor,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: tileColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      trailing: Text(
+        value,
+        style: TextStyle(
+          color: valueColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider(Color color) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 76,
+      endIndent: 20,
+      color: color,
     );
   }
 }

@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/features/salao/presentation/salao.dart';
 import 'package:techbistro/src/features/salao/presentation/pedidos_prontos.dart';
 import 'package:techbistro/src/features/settings/presentation/settings.dart';
 import 'package:techbistro/src/features/cardapio/presentation/qr_code.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 1;
   int _readyOrdersCount = 0;
   StreamSubscription<List<Map<String, dynamic>>>? _readyOrdersSubscription;
@@ -50,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print('Erro ao buscar contagem de pedidos: $e');
+      debugPrint('Erro ao buscar contagem de pedidos: $e');
     }
   }
 
@@ -64,16 +66,20 @@ class _HomeScreenState extends State<HomeScreen> {
             _fetchReadyOrdersCount();
           },
           onError: (error) {
-            print('Erro no listener de pedidos: $error');
+            debugPrint('Erro no listener de pedidos: $error');
           },
         );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    const Color brandColor = Color(0xFF840011); 
+    final themeProvider = ref.watch(themeControllerProvider);
+    final bool isDark = themeProvider.isDarkMode;
     
+    final Color backgroundColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color activeColor = const Color(0xFF840011); 
+    final Color inactiveColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -82,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         height: 80,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          color: backgroundColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -99,14 +105,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.qr_code_scanner_rounded,
                 label: "QR Code",
                 index: 0,
-                activeColor: brandColor,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
               ),
               
               _buildModernNavItem(
                 icon: Icons.table_restaurant_rounded,
                 label: "Salão",
                 index: 1,
-                activeColor: brandColor,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
               ),
 
               _buildModernNavItem(
@@ -114,7 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 activeIcon: Icons.notifications_active_rounded,
                 label: "Pedidos",
                 index: 2,
-                activeColor: brandColor,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
                 badgeCount: _readyOrdersCount,
               ),
 
@@ -123,7 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 activeIcon: Icons.settings_rounded,
                 label: "Ajustes",
                 index: 3,
-                activeColor: brandColor,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
               ),
             ],
           ),
@@ -137,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String label,
     required int index,
     required Color activeColor,
+    required Color inactiveColor,
     IconData? activeIcon,
     int badgeCount = 0,
   }) {
@@ -172,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   duration: const Duration(milliseconds: 200),
                   child: Icon(
                     displayIcon,
-                    color: isSelected ? activeColor : Colors.grey.shade400,
+                    color: isSelected ? activeColor : inactiveColor,
                     size: 28,
                   ),
                 ),
@@ -210,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? activeColor : Colors.grey.shade500,
+                color: isSelected ? activeColor : inactiveColor,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

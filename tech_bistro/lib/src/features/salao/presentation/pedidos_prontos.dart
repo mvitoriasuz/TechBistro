@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 import '../../cozinha/presentation/historico_entregues.dart';
 
-class PedidosProntosPage extends StatefulWidget {
+class PedidosProntosPage extends ConsumerStatefulWidget {
   const PedidosProntosPage({super.key});
 
   @override
-  State<PedidosProntosPage> createState() => _PedidosProntosPageState();
+  ConsumerState<PedidosProntosPage> createState() => _PedidosProntosPageState();
 }
 
-class _PedidosProntosPageState extends State<PedidosProntosPage> {
+class _PedidosProntosPageState extends ConsumerState<PedidosProntosPage> {
   final supabase = Supabase.instance.client;
-  final Color primaryRed = const Color(0xFF840011);
-  final Color backgroundLight = const Color(0xFFF8F9FA);
 
   List<dynamic> pedidosProntos = [];
   bool carregando = true;
@@ -68,6 +68,10 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
   }
 
   Future<void> marcarComoEntregue(int idPedido, String prato, int qtd, int mesa) async {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final primaryRed = const Color(0xFF840011);
+
     final bool? confirmar = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => _buildModernDialog(
@@ -75,13 +79,13 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
         content: Text(
           'Confirmar a entrega de ${qtd}x $prato da Mesa $mesa?',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey[700], fontSize: 16),
+          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 16),
         ),
         icon: Icons.check_circle_outline,
         actions: [
           _buildDialogButton(
             label: 'Cancelar',
-            color: Colors.grey[600]!,
+            color: isDark ? Colors.grey[600]! : Colors.grey[600]!,
             onPressed: () => Navigator.of(context).pop(false),
           ),
           _buildDialogButton(
@@ -129,6 +133,7 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final primaryRed = const Color(0xFF840011);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
@@ -142,8 +147,22 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+
+    final List<Color> cardGradient = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
+
     return Scaffold(
-      backgroundColor: backgroundLight,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
@@ -166,7 +185,7 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
               Text(
                 'Visão geral da cozinha',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: subtitleColor,
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                 ),
@@ -178,11 +197,11 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -208,11 +227,19 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_outline, size: 80, color: Colors.grey[300]),
+                      Icon(
+                        Icons.check_circle_outline, 
+                        size: 80, 
+                        color: isDark ? Colors.grey[700] : Colors.grey[300]
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Tudo entregue por enquanto!',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 18),
+                        style: TextStyle(
+                          color: subtitleColor, 
+                          fontSize: 18,
+                          fontFamily: 'Nats',
+                        ),
                       ),
                     ],
                   ),
@@ -232,11 +259,15 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: primaryRed,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: cardGradient,
+                        ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryRed.withOpacity(0.3),
+                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.15),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),
@@ -268,7 +299,7 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(0.2),
+                                            color: Colors.white.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Text(
@@ -415,6 +446,11 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
     IconData? icon,
     Color? iconColor,
   }) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final primaryRed = const Color(0xFF840011);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 0,
@@ -422,11 +458,11 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.15),
               blurRadius: 25,
               offset: const Offset(0, 10),
             ),
@@ -448,10 +484,10 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
             ],
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D2D2D),
+                color: textColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -472,11 +508,14 @@ class _PedidosProntosPageState extends State<PedidosProntosPage> {
     required VoidCallback onPressed,
     bool isPrimary = false,
   }) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         elevation: 0,
-        backgroundColor: isPrimary ? color : Colors.white,
+        backgroundColor: isPrimary ? color : surfaceColor,
         foregroundColor: isPrimary ? Colors.white : color,
         side: isPrimary ? BorderSide.none : BorderSide(color: color.withOpacity(0.3)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

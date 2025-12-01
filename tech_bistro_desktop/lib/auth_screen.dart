@@ -1,49 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tech_bistro_desktop/src/features/home/presentation/home.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cnpjController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _senhaCtrl = TextEditingController();
 
-  bool _isLoading = false;
-  bool _obscurePassword = true;
+  bool _loading = false;
+  bool _obscure = true;
 
- void _login() async {
+Future<void> _login() async {
   if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoading = true);
+  setState(() => _loading = true);
 
   try {
-    final authResponse = await Supabase.instance.client.auth.signInWithPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+    final supabase = Supabase.instance.client;
+
+    final response = await supabase.auth.signInWithPassword(
+      email: _emailCtrl.text.trim(),
+      password: _senhaCtrl.text.trim(),
     );
 
-    if (authResponse.user != null) {
-      // Login OK → vai pra Home SEM redirecionar para fora do app
+    // LOGIN FUNCIONOU
+    if (response.user != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const HomePage()),
       );
+      return;
     }
+
+    // FALHA DE LOGIN
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Credenciais inválidas")),
+    );
+
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Erro ao entrar: $e')),
+      SnackBar(content: Text("Erro ao entrar: $e")),
     );
   } finally {
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _loading = false);
   }
 }
 
@@ -72,107 +79,97 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // CABEÇALHO
-                Column(
-                  children: [
-                    Text(
-                      'TECHBISTRO',
-                      style: TextStyle(
-                        fontFamily: 'Nats',
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryDark,
-                        fontSize: 34,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Acesso ao sistema',
-                      style: TextStyle(
-                        fontFamily: 'Nats',
-                        color: AppColors.secondary,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ],
+                // TÍTULO
+                Text(
+                  'TECHBISTRO',
+                  style: TextStyle(
+                    fontFamily: 'Nats',
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryDark,
+                    fontSize: 34,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Acesso ao sistema',
+                  style: TextStyle(
+                    fontFamily: 'Nats',
+                    color: AppColors.secondary,
+                    fontSize: 20,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
-                // FORMULÁRIO
+                // FORM
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      const SizedBox(height: 18),
-                      _buildTextField(
-                        controller: _emailController,
-                        label: 'E-mail',
+                      _buildField(
+                        controller: _emailCtrl,
+                        label: "E-mail",
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Digite seu e-mail';
-                          if (!v.contains('@')) return 'E-mail inválido';
+                          if (v == null || v.isEmpty) return "Digite seu e-mail";
+                          if (!v.contains("@")) return "E-mail inválido";
                           return null;
                         },
                       ),
-                      const SizedBox(height: 18),
-                      _buildTextField(
-                        controller: _passwordController,
-                        label: 'Senha',
+                      const SizedBox(height: 20),
+
+                      _buildField(
+                        controller: _senhaCtrl,
+                        label: "Senha",
                         icon: Icons.lock_outline,
-                        obscureText: _obscurePassword,
+                        obscureText: _obscure,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return "Digite sua senha";
+                          if (v.length < 3) return "Senha curta demais";
+                          return null;
+                        },
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            _obscure ? Icons.visibility_off : Icons.visibility,
                             color: AppColors.secondary,
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                            setState(() => _obscure = !_obscure);
                           },
                         ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Digite sua senha';
-                          if (v.length < 6) {
-                            return 'A senha deve ter pelo menos 6 caracteres';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 30),
 
-                      // BOTÃO LOGIN
+                      // BOTÃO ENTRAR
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
+                          onPressed: _loading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
+                            elevation: 3,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            elevation: 3,
                           ),
-                          onPressed: _isLoading ? null : _login,
-                          child: _isLoading
+                          child: _loading
                               ? const CircularProgressIndicator(
                                   color: Colors.white,
                                 )
                               : Text(
-                                  'Entrar',
+                                  "Entrar",
                                   style: TextStyle(
                                     fontFamily: 'Nats',
-                                    color: Colors.white,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
@@ -184,20 +181,21 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _buildTextField({
+  // CAMPO ESTILIZADO
+  Widget _buildField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    TextInputType? keyboardType,
     bool obscureText = false,
+    TextInputType? keyboardType,
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType,
       obscureText: obscureText,
       validator: validator,
+      keyboardType: keyboardType,
       style: TextStyle(
         fontFamily: 'Nats',
         color: AppColors.textDark,

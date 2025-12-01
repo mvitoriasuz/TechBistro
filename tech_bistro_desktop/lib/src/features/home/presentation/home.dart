@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list_view.dart';
-import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
-import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia_list_view.dart';
+import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list.dart';
+import 'package:tech_bistro_desktop/src/features/usuario/usuario_list.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
-import '../../usuario/presentation/usuario.dart';
-import 'package:tech_bistro_desktop/src/features/hierarquia/presentation/hierarquia.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +15,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> menuItems = [
     'Usuário',
-    'Grupo de Acesso',
     'Cardápio',
     'Relatório',
   ];
@@ -37,15 +33,14 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const SizedBox(height: 50),
                 Image.asset(
-                'assets/images/logo.png',
+                  'assets/images/logo.png',
                   height: 60,
                   width: 60,
                   errorBuilder: (context, error, stackTrace) {
-                    print(error); 
+                    print(error);
                     return const Text("ERRO AO CARREGAR IMAGEM");
                   },
                 ),
-
                 const SizedBox(height: 10),
                 const Text(
                   'Admin TechBistro',
@@ -65,14 +60,9 @@ class _HomePageState extends State<HomePage> {
                     itemBuilder: (context, index) {
                       final isSelected = index == selectedIndex;
                       return InkWell(
-                        onTap: () {
-                          setState(() => selectedIndex = index);
-                        },
+                        onTap: () => setState(() => selectedIndex = index),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 15,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                           color: isSelected
                               ? AppColors.primary.withOpacity(0.2)
                               : Colors.transparent,
@@ -93,9 +83,7 @@ class _HomePageState extends State<HomePage> {
                                       ? AppColors.secondary
                                       : AppColors.textLight.withOpacity(0.7),
                                   fontSize: 16,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
                             ],
@@ -105,23 +93,11 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                 ),
-
                 const Divider(color: Colors.white24, height: 1),
-
-                // Logout
                 ListTile(
-                  leading: const Icon(
-                    Icons.logout,
-                    color: Colors.redAccent,
-                    size: 22,
-                  ),
-                  title: const Text(
-                    'Sair',
-                    style: TextStyle(color: Colors.redAccent, fontSize: 15),
-                  ),
-                  onTap: () {
-                    Navigator.pushReplacementNamed(context, '/');
-                  },
+                  leading: const Icon(Icons.logout, color: Colors.redAccent, size: 22),
+                  title: const Text('Sair', style: TextStyle(color: Colors.redAccent, fontSize: 15)),
+                  onTap: () => Navigator.pushReplacementNamed(context, '/'),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -144,19 +120,13 @@ class _HomePageState extends State<HomePage> {
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
-        return const UsuarioPage();
+        return const UsuarioListPage();
       case 1:
-        return const HierarquiaListView();
+        return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:
-        return const PratoListView(idEstabelecimento: 1);  
-      case 3:
-        return const Center(
-          child: Text("Tela de Relatório", style: TextStyle(fontSize: 28)),
-        );
+        return const Center(child: Text("Tela de Relatório", style: TextStyle(fontSize: 28)));
       default:
-        return const Center(
-          child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)),
-        );
+        return const Center(child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)));
     }
   }
 
@@ -165,10 +135,8 @@ class _HomePageState extends State<HomePage> {
       case 0:
         return Icons.person;
       case 1:
-        return Icons.security;
-      case 2:
         return Icons.restaurant;
-      case 3:
+      case 2:
         return Icons.bar_chart;
       default:
         return Icons.circle;

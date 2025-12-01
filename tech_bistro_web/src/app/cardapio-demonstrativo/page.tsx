@@ -60,41 +60,13 @@ export default function CardapioDemonstrativo() {
                <div className="relative">
                   <div className="absolute -inset-4 bg-[#C5A47E]/20 blur-xl rounded-full"></div>
                   <div className="relative bg-black rounded-[3rem] border-4 border-gray-800 p-2 shadow-2xl w-[280px]">
-                     <div className="bg-white rounded-[2.5rem] overflow-hidden h-[550px] relative flex flex-col">
-                        <div className="h-40 bg-gray-100 relative">
-                           <div className="absolute bottom-4 left-4">
-                              <div className="w-20 h-6 bg-white/80 backdrop-blur rounded-full"></div>
-                           </div>
-                        </div>
-                        <div className="p-6 flex-1 bg-white">
-                           <div className="w-3/4 h-6 bg-gray-100 rounded mb-4"></div>
-                           <div className="space-y-4">
-                              <div className="flex gap-4 items-center">
-                                 <div className="w-16 h-16 bg-gray-100 rounded-lg"></div>
-                                 <div className="flex-1 space-y-2">
-                                    <div className="w-full h-3 bg-gray-50 rounded"></div>
-                                    <div className="w-1/2 h-3 bg-gray-50 rounded"></div>
-                                 </div>
-                              </div>
-                              <div className="flex gap-4 items-center">
-                                 <div className="w-16 h-16 bg-gray-100 rounded-lg"></div>
-                                 <div className="flex-1 space-y-2">
-                                    <div className="w-full h-3 bg-gray-50 rounded"></div>
-                                    <div className="w-1/2 h-3 bg-gray-50 rounded"></div>
-                                 </div>
-                              </div>
-                              <div className="flex gap-4 items-center">
-                                 <div className="w-16 h-16 bg-gray-100 rounded-lg"></div>
-                                 <div className="flex-1 space-y-2">
-                                    <div className="w-full h-3 bg-gray-50 rounded"></div>
-                                    <div className="w-1/2 h-3 bg-gray-50 rounded"></div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                        <div className="p-4 border-t bg-gray-50">
-                           <div className="w-full h-10 bg-[#510006] rounded flex items-center justify-center text-white text-[10px] uppercase font-bold">Finalizar Pedido</div>
-                        </div>
+                     <div className="bg-white rounded-[2.5rem] overflow-hidden h-[550px] relative">
+                        <Image 
+                           src="/images/mobile.jpeg" 
+                           alt="Preview do App TechBistro"
+                           fill
+                           className="object-cover"
+                        />
                      </div>
                   </div>
                </div>

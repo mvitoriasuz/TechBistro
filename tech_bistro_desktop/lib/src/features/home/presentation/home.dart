@@ -183,7 +183,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:
-        return DashboardPage(); 
+        return const DashboardPage();
       case 3:
         return const SuporteAdminPage();
       default:

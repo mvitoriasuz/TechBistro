@@ -172,7 +172,7 @@ class _SalaoPageState extends State<SalaoPage> {
           'status': status
         });
 
-        if (status != 'entregue' && status != 'pronto') {
+        if (status != 'entregue') {
           temPedidosPendentes = true;
         }
       }
@@ -191,8 +191,8 @@ class _SalaoPageState extends State<SalaoPage> {
       if (temPedidosPendentes) {
         if (mounted) {
            _showBloqueioDialog(
-            'Pedidos em Andamento', 
-            'Esta mesa possui pedidos sendo preparados ou pendentes. Aguarde a finalização ou entrega para fechar a mesa.'
+            'Pedidos não entregues', 
+            'Esta mesa possui pedidos pendentes, em preparo ou prontos (não entregues). Certifique-se de que tudo foi entregue ao cliente.'
           );
         }
         return;

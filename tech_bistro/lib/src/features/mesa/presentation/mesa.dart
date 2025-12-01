@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
-import 'package:techbistro/src/features/salao/presentation/salao.dart';
+import 'package:techbistro/src/features/home/presentation/home_screen.dart';
 import 'new_order.dart';
 
 class MesaPage extends StatefulWidget {
@@ -43,10 +43,16 @@ class _MesaPageState extends State<MesaPage> {
           .eq('id_mesa', widget.numeroMesa);
 
       double soma = 0.0;
+      bool todosEntregues = true;
+
       for (var pedido in response) {
         final qtd = pedido['qtd_pedido'] ?? 0;
         final valorPrato = (pedido['pratos']?['valor_prato'] as num? ?? 0.0).toDouble();
         soma += (qtd * valorPrato);
+
+        if (pedido['status_pedido'] != 'entregue') {
+          todosEntregues = false;
+        }
       }
 
       final pagamentosResponse = await supabase
@@ -68,8 +74,27 @@ class _MesaPageState extends State<MesaPage> {
         });
       }
 
-      if ((totalPedido - totalPago).abs() < 0.01 && totalPedido > 0) {
-        _showCloseTableDialog();
+      bool contaPaga = (totalPedido - totalPago).abs() < 0.01 && totalPedido > 0;
+
+      if (contaPaga) {
+        if (todosEntregues) {
+          _showCloseTableDialog();
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Conta paga! Aguarde a entrega de todos os pedidos para fechar a mesa.',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.orange[700],
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -117,7 +142,7 @@ class _MesaPageState extends State<MesaPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Todos os pagamentos foram efetuados.\nDeseja liberar a Mesa ${widget.numeroMesa}?',
+                  'Pagamentos OK e pedidos entregues.\nDeseja liberar a Mesa ${widget.numeroMesa}?',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
@@ -188,7 +213,7 @@ class _MesaPageState extends State<MesaPage> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const SalaoPage()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
           (Route<dynamic> route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
@@ -499,12 +524,13 @@ class _MesaPageState extends State<MesaPage> {
       final qtd = pedido['qtd_pedido'] ?? 0;
       final valorPrato = (pedido['pratos']?['valor_prato'] as num? ?? 0.0).toDouble();
       final totalItem = qtd * valorPrato;
-
+      final status = pedido['status_pedido'] ?? 'pendente';
+      
       if (pedidosAgrupados.containsKey(nomePrato)) {
         pedidosAgrupados[nomePrato]['qtd'] += qtd;
         pedidosAgrupados[nomePrato]['total'] += totalItem;
       } else {
-        pedidosAgrupados[nomePrato] = {'qtd': qtd, 'total': totalItem};
+        pedidosAgrupados[nomePrato] = {'qtd': qtd, 'total': totalItem, 'status': status};
       }
     }
 

@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
-class HistoricoEntregaPage extends StatefulWidget {
+class HistoricoEntregaPage extends ConsumerStatefulWidget {
   const HistoricoEntregaPage({super.key});
 
   @override
-  State<HistoricoEntregaPage> createState() => _HistoricoEntregaPageState();
+  ConsumerState<HistoricoEntregaPage> createState() => _HistoricoEntregaPageState();
 }
 
-class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
+class _HistoricoEntregaPageState extends ConsumerState<HistoricoEntregaPage> {
   final supabase = Supabase.instance.client;
-
-  final Color primaryRed = const Color(0xFF840011);
-  final Color backgroundLight = const Color(0xFFF8F9FA);
 
   List<dynamic> pedidosEntregues = [];
   bool carregandoHistorico = true;
@@ -43,7 +42,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
       if (mounted) {
         setState(() => carregandoHistorico = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: primaryRed),
+          SnackBar(content: Text('Erro: $e'), backgroundColor: const Color(0xFF840011)),
         );
       }
     }
@@ -51,6 +50,10 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
 
   Future<bool> _processarDevolucao(int idPedido, String nomePrato) async {
     final TextEditingController motivoController = TextEditingController();
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : Colors.black87;
+    final inputFill = isDark ? const Color(0xFF2C2C2C) : Colors.grey[50];
 
     final bool? confirmar = await showDialog<bool>(
       context: context,
@@ -62,11 +65,11 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.15),
                 blurRadius: 25,
                 offset: const Offset(0, 10),
               ),
@@ -78,19 +81,19 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: primaryRed.withOpacity(0.1),
+                  color: const Color(0xFF840011).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.assignment_return_rounded, size: 32, color: primaryRed),
+                child: const Icon(Icons.assignment_return_rounded, size: 32, color: Color(0xFF840011)),
               ),
               const SizedBox(height: 20),
               Text(
                 'Reportar Problema',
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Nats',
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: primaryRed,
+                  color: Color(0xFF840011),
                   height: 1.0,
                 ),
               ),
@@ -98,12 +101,12 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16, fontFamily: 'Nats'),
+                  style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 16, fontFamily: 'Nats'),
                   children: [
                     const TextSpan(text: 'O prato '),
                     TextSpan(
                       text: nomePrato,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
                     ),
                     const TextSpan(text: ' voltará para a cozinha.'),
                   ],
@@ -113,12 +116,12 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
               TextField(
                 controller: motivoController,
                 autofocus: true,
-                style: const TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: textColor),
                 decoration: InputDecoration(
                   hintText: 'Qual o motivo? (Ex: Frio, Errado...)',
                   hintStyle: TextStyle(color: Colors.grey[400], fontFamily: 'Nats'),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: inputFill,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -139,7 +142,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                       child: Text(
                         'Cancelar',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           fontFamily: 'Nats',
@@ -160,7 +163,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                         Navigator.of(context).pop(true);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryRed,
+                        backgroundColor: const Color(0xFF840011),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -196,7 +199,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Pedido devolvido para análise!'),
-              backgroundColor: primaryRed,
+              backgroundColor: const Color(0xFF840011),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               margin: const EdgeInsets.all(16),
@@ -222,8 +225,17 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+    final Color primaryRed = const Color(0xFF840011);
+    
     return Scaffold(
-      backgroundColor: backgroundLight,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -246,7 +258,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
               Text(
                 'Entregas finalizadas',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: subtitleColor,
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                 ),
@@ -258,11 +270,11 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF333333) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -286,12 +298,16 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.check_circle_outline_rounded, size: 80, color: Colors.grey[300]),
+                            Icon(
+                              Icons.check_circle_outline_rounded, 
+                              size: 80, 
+                              color: isDark ? Colors.white24 : Colors.grey[300]
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Nenhuma entrega registrada.',
                               style: TextStyle(
-                                color: Colors.grey[400],
+                                color: subtitleColor,
                                 fontFamily: 'Nats',
                                 fontSize: 20,
                               ),
@@ -369,14 +385,19 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
     final alergia = pedido['alergia_pedido'] as String?;
     final horario = _formatarHorario(pedido['horario_entregue'] as String?);
 
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -388,9 +409,9 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: primaryRed,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: const BoxDecoration(
+                color: Color(0xFF840011),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -453,11 +474,11 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                     children: [
                       Text(
                         '${qtd}x',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Nats',
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: primaryRed,
+                          color: Color(0xFF840011),
                           height: 1.0,
                         ),
                       ),
@@ -465,11 +486,11 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                       Expanded(
                         child: Text(
                           prato,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'Nats',
                             fontSize: 24,
                             height: 1.1,
-                            color: Color(0xFF2D2D2D),
+                            color: textColor,
                           ),
                         ),
                       ),
@@ -477,7 +498,7 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                   ),
                   if ((observacao != null && observacao.isNotEmpty) || (alergia != null && alergia.isNotEmpty)) ...[
                     const SizedBox(height: 16),
-                    const Divider(height: 1, color: Color(0xFFF0F0F0)),
+                    Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFF0F0F0)),
                     const SizedBox(height: 12),
                     if (observacao != null && observacao.isNotEmpty)
                       Padding(
@@ -487,14 +508,14 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
-                              child: Icon(Icons.notes_rounded, size: 16, color: Colors.grey[400]),
+                              child: Icon(Icons.notes_rounded, size: 16, color: subtitleColor),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 observacao,
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  color: subtitleColor,
                                   fontStyle: FontStyle.italic,
                                   fontFamily: 'Nats',
                                   fontSize: 16,
@@ -508,19 +529,19 @@ class _HistoricoEntregaPageState extends State<HistoricoEntregaPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF4F4),
+                          color: isDark ? const Color(0xFF451010) : const Color(0xFFFFF4F4),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.red.withOpacity(0.1)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: primaryRed, size: 16),
+                            const Icon(Icons.warning_amber_rounded, color: Color(0xFF840011), size: 16),
                             const SizedBox(width: 8),
                             Text(
                               'ALERGIA: ${alergia.toUpperCase()}',
-                              style: TextStyle(
-                                color: primaryRed,
+                              style: const TextStyle(
+                                color: Color(0xFF840011),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),

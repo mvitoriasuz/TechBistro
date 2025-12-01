@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/constants/app_colors.dart';
-import 'dart:ui';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
-class UsersPage extends StatefulWidget {
+class UsersPage extends ConsumerStatefulWidget {
   const UsersPage({super.key});
 
   @override
-  State<UsersPage> createState() => _UsersPageState();
+  ConsumerState<UsersPage> createState() => _UsersPageState();
 }
 
-class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMixin {
+class _UsersPageState extends ConsumerState<UsersPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -135,11 +135,24 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
     final menuUrl = _getMenuUrl();
     final displayUrl = _getDisplayUrl(menuUrl);
     
-    const Color primaryRed = Color(0xFF840011);
-    const Color darkRed = Color(0xFF510006);
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    
+    final List<Color> gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
+
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color linkBoxColor = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF8F1F2);
+    final Color actionBtnColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200;
+    final Color actionIconColor = isDark ? Colors.white70 : Colors.black87;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -177,11 +190,11 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
       body: Stack(
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [darkRed, primaryRed],
+                colors: gradientColors,
               ),
             ),
           ),
@@ -205,7 +218,7 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.white.withOpacity(0.05),
               ),
             ),
           ),
@@ -238,7 +251,7 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                               constraints: const BoxConstraints(maxWidth: 300),
                               padding: const EdgeInsets.all(25),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: surfaceColor,
                                 borderRadius: BorderRadius.circular(40),
                                 boxShadow: [
                                   BoxShadow(
@@ -259,11 +272,11 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                                     padding: EdgeInsets.zero,
                                     eyeStyle: const QrEyeStyle(
                                       eyeShape: QrEyeShape.circle, 
-                                      color: primaryRed,
+                                      color: Color(0xFF840011),
                                     ),
-                                    dataModuleStyle: const QrDataModuleStyle(
+                                    dataModuleStyle: QrDataModuleStyle(
                                       dataModuleShape: QrDataModuleShape.circle,
-                                      color: Color(0xFF2D2D2D),
+                                      color: isDark ? Colors.white : const Color(0xFF2D2D2D),
                                     ),
                                   ),
                                   const SizedBox(height: 25),
@@ -273,7 +286,7 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                                       vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8F1F2),
+                                      color: linkBoxColor,
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(color: primaryRed.withOpacity(0.1)),
                                     ),
@@ -283,14 +296,14 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                                         const Icon(
                                           Icons.link_rounded,
                                           size: 18,
-                                          color: primaryRed,
+                                          color: Color(0xFF840011),
                                         ),
                                         const SizedBox(width: 8),
                                         Flexible(
                                           child: Text(
                                             displayUrl,
-                                            style: const TextStyle(
-                                              color: Colors.black87,
+                                            style: TextStyle(
+                                              color: textColor,
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -311,7 +324,7 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                       margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
+                        color: surfaceColor.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(35),
                         boxShadow: [
                           BoxShadow(
@@ -328,8 +341,8 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                           _ActionButton(
                             icon: Icons.share_rounded,
                             label: 'Enviar',
-                            color: Colors.black87,
-                            backgroundColor: Colors.grey.shade200,
+                            color: actionIconColor,
+                            backgroundColor: actionBtnColor,
                             onTap: () => _shareURL(menuUrl),
                           ),
                           _ActionButton(
@@ -345,8 +358,8 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
                           _ActionButton(
                             icon: Icons.print_rounded,
                             label: 'Imprimir',
-                            color: Colors.black87,
-                            backgroundColor: Colors.grey.shade200,
+                            color: actionIconColor,
+                            backgroundColor: actionBtnColor,
                             onTap: () => _printMenu(context, menuUrl),
                           ),
                         ],
@@ -434,7 +447,7 @@ class _ActionButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: Colors.grey[600],
               fontFamily: 'Nats',
               letterSpacing: 0.5,
             ),

@@ -18,6 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscure = true;
 
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _senhaCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleForgotPassword() async {
     final resetEmailCtrl = TextEditingController(text: _emailCtrl.text);
     await showDialog(
@@ -26,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.transparent,
         child: Container(
+          width: 400, // Largura ajustada para o diálogo desktop
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: AppColors.textLight,
@@ -77,6 +85,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.secondary,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -101,11 +116,28 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () async {
                         final email = resetEmailCtrl.text.trim();
                         if (email.isEmpty) return;
+                        Navigator.pop(context); 
                         try {
                           await Supabase.instance.client.auth
                               .resetPasswordForEmail(email);
-                          if (mounted) Navigator.pop(context);
-                        } catch (_) {}
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Instruções de recuperação de senha enviadas! Verifique sua caixa de entrada.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } on AuthException catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Erro ao recuperar senha: ${e.message}"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -149,13 +181,14 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } on AuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Erro: ${e.message}"),
             backgroundColor: Colors.red,
           ),
         );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -266,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: const TextStyle(color: AppColors.textDark),
                             decoration: InputDecoration(
                               labelText: "E-mail",
-                              labelStyle: TextStyle(color: AppColors.secondary),
+                              labelStyle: const TextStyle(color: AppColors.secondary),
                               prefixIcon: const Icon(
                                 Icons.email_outlined,
                                 color: AppColors.secondary,
@@ -293,10 +326,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextFormField(
                             controller: _senhaCtrl,
                             obscureText: _obscure,
-                            style: const TextStyle(color: AppColors.textDark),
+                            obscuringCharacter: '*', 
+                            style: const TextStyle(color: Colors.black),
                             decoration: InputDecoration(
                               labelText: "Senha",
-                              labelStyle: TextStyle(color: AppColors.secondary),
+                              labelStyle: const TextStyle(color: AppColors.secondary),
                               prefixIcon: const Icon(
                                 Icons.lock_outline,
                                 color: AppColors.secondary,

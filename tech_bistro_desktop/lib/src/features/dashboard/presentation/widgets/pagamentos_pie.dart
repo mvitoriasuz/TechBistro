@@ -1,63 +1,79 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 
-import '../../models/dashboard_models.dart';
+class PagamentosPieChart extends StatelessWidget {
+  final Map<String, double> pagamentos;
 
-class PagamentoPie extends StatelessWidget {
-  final List<PagamentoResumo> resumo;
-
-  const PagamentoPie({Key? key, required this.resumo}) : super(key: key);
+  const PagamentosPieChart({super.key, required this.pagamentos});
 
   @override
   Widget build(BuildContext context) {
-    final total = resumo.fold<double>(
-      0.0,
-      (p, e) => p + e.totalValor,
-    );
+    if (pagamentos.isEmpty) {
+      return const Center(child: Text("Sem dados de pagamentos"));
+    }
+    final total = pagamentos.values.fold(0.0, (a, b) => a + b);
 
-    final sections = resumo.map((r) {
-      final percent = total == 0 ? 0.0 : (r.totalValor / total) * 100;
+    final sections = pagamentos.entries.map((entry) {
+      final percent = total == 0 ? 0.0 : (entry.value / total) * 100;
+      
       return PieChartSectionData(
-        value: r.totalValor,
+        value: entry.value,
         title: "${percent.toStringAsFixed(1)}%",
-        radius: 60,
+        radius: 50,
+        color: _getColorForMethod(entry.key),
         titleStyle: const TextStyle(
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
+          color: Colors.white,
+          shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
         ),
       );
     }).toList();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Métodos de pagamento',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
         SizedBox(
           height: 180,
           child: PieChart(
             PieChartData(
               sections: sections,
-              centerSpaceRadius: 30,
+              centerSpaceRadius: 40,
+              sectionsSpace: 2,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          runSpacing: 4,
-          children: resumo
-              .map((r) => Chip(
-                    label: Text(
-                      "${r.metodo} — R\$ ${r.totalValor.toStringAsFixed(2)}",
-                    ),
-                  ))
-              .toList(),
-        )
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: pagamentos.entries.map((e) {
+            return Chip(
+              avatar: CircleAvatar(
+                backgroundColor: _getColorForMethod(e.key),
+                radius: 6,
+              ),
+              label: Text(
+                "${e.key} (R\$ ${e.value.toStringAsFixed(2)})",
+                style: const TextStyle(fontSize: 12),
+              ),
+              backgroundColor: Colors.grey[100],
+              padding: const EdgeInsets.all(4),
+            );
+          }).toList(),
+        ),
       ],
     );
+  }
+
+  Color _getColorForMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'pix': return Colors.teal;
+      case 'credito': return Colors.blue[700]!;
+      case 'debito': return Colors.orange[400]!;
+      case 'dinheiro': return Colors.green[600]!;
+      case 'voucher': return Colors.purple;
+      default: return Colors.grey;
+    }
   }
 }

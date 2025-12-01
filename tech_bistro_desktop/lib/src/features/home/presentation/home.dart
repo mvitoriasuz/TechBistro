@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list.dart';
+import 'package:tech_bistro_desktop/src/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:tech_bistro_desktop/src/features/usuario/presentation/usuario.dart';
-import 'package:tech_bistro_desktop/src/features/suporte/presentation/suporte_admin_page.dart'; 
+import 'package:tech_bistro_desktop/src/features/suporte/presentation/suporte_admin_page.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   final List<String> menuItems = [
     'Usuário',
     'Cardápio',
-    'Relatório',
+    'Dashboard',
     'Suporte',
   ];
 
@@ -53,7 +54,7 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      debugPrint("Erro ao buscar notificações: $e");
+      debugPrint("Erro: $e");
     }
   }
 
@@ -182,7 +183,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:
-        return const Center(child: Text("Tela de Relatório", style: TextStyle(fontSize: 28)));
+        return DashboardPage(); 
       case 3:
         return const SuporteAdminPage();
       default:

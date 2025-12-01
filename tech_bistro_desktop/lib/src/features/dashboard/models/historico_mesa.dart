@@ -1,28 +1,30 @@
 class HistoricoMesa {
   final int id;
-  final DateTime dataFechamento;
+  final DateTime? dataFechamento;
   final int numeroMesa;
   final double valorTotal;
-  final List<Map<String, dynamic>> itensPedido;
-  final Map<String, dynamic> pagamentos;
+  final List<dynamic> itensPedido;
+  final List<dynamic> pagamentos;
 
   HistoricoMesa({
     required this.id,
-    required this.dataFechamento,
+    this.dataFechamento,
     required this.numeroMesa,
     required this.valorTotal,
     required this.itensPedido,
     required this.pagamentos,
   });
 
-  factory HistoricoMesa.fromMap(Map<String, dynamic> map) {
+  factory HistoricoMesa.fromJson(Map<String, dynamic> json) {
     return HistoricoMesa(
-      id: map['id'],
-      dataFechamento: DateTime.parse(map['data_fechamento']),
-      numeroMesa: map['numero_mesa'] ?? 0,
-      valorTotal: (map['valor_total'] ?? 0).toDouble(),
-      itensPedido: List<Map<String, dynamic>>.from(map['itens_pedido'] ?? []),
-      pagamentos: Map<String, dynamic>.from(map['pagamentos'] ?? {}),
+      id: json['id'] ?? 0,
+      dataFechamento: json['data_fechamento'] != null 
+          ? DateTime.tryParse(json['data_fechamento'].toString()) 
+          : null,
+      numeroMesa: int.tryParse(json['numero_mesa'].toString()) ?? 0,
+      valorTotal: double.tryParse((json['valor_total'] ?? 0).toString()) ?? 0.0,
+      itensPedido: json['itens_pedido'] is List ? json['itens_pedido'] : [],
+      pagamentos: json['pagamentos'] is List ? json['pagamentos'] : [],
     );
   }
 }

@@ -1,34 +1,46 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../models/dashboard_models.dart'; // ou onde PagamentoResumo está
+import 'package:flutter/material.dart';
 
 class PaymentPieChart extends StatelessWidget {
-  final List<PagamentoResumo> data;
+  final Map<String, double> pagamentos;
 
-  const PaymentPieChart(this.data, {Key? key}) : super(key: key);
+  const PaymentPieChart({super.key, required this.pagamentos});
 
   @override
   Widget build(BuildContext context) {
-    final sections = data.map((p) {
-      return PieChartSectionData(
-        value: p.totalValor,
-        title: '${p.metodo}\n${p.totalValor.toStringAsFixed(2)}',
-        radius: 50,
-        titleStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      );
-    }).toList();
+    final total = pagamentos.values.fold(0.0, (a, b) => a + b);
 
     return PieChart(
       PieChartData(
-        sections: sections,
         sectionsSpace: 2,
-        centerSpaceRadius: 30,
-        borderData: FlBorderData(show: false),
+        centerSpaceRadius: 40,
+        sections: pagamentos.entries.map((e) {
+          final isLarge = total > 0 && (e.value / total > 0.2);
+          final percentage = total > 0 ? (e.value / total * 100).toStringAsFixed(0) : '0';
+          
+          return PieChartSectionData(
+            color: _getColorForMethod(e.key),
+            value: e.value,
+            title: '$percentage%',
+            radius: isLarge ? 60 : 50,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          );
+        }).toList(),
       ),
     );
+  }
+
+  Color _getColorForMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'pix': return Colors.teal;
+      case 'credito': return Colors.blue;
+      case 'debito': return Colors.orange;
+      case 'dinheiro': return Colors.green;
+      default: return Colors.grey;
+    }
   }
 }

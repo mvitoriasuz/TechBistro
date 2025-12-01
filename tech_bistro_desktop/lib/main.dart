@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:tech_bistro_desktop/auth_screen.dart';
-import 'package:tech_bistro_desktop/src/features/dashboard/data/dashboard_service_api.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:tech_bistro_desktop/auth_screen.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('pt_BR', null);
 
   await Supabase.initialize(
     url: 'https://hliczkulyvskjjbigvvk.supabase.co',
@@ -20,19 +22,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'TechBistro Admin',
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      theme: ThemeData(
+        useMaterial3: true,
+        fontFamily: 'Nats',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF840011),
+          surface: const Color(0xFFF5F7FA),
+        ),
+      ),
+      home: const LoginScreen(),
     );
   }
-}
-
-void testFetch() async {
-  final svc = DashboardServiceApi();
-  final hist = await svc.fetchHistorico();
-  print('registros: ${hist.length}');
-  final pagamentos = await svc.fetchPagamentosResumo();
-  print('pagamentos: $pagamentos');
-  final ticket = await svc.fetchTicketMedio();
-  print('ticket medio: $ticket');
 }

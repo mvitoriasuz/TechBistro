@@ -9,17 +9,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'brand-red': '#990000',
-        'dark-bg': '#1a1a1a',
-        'light-text': '#ededed',
-        'dark-text': '#171717',
+        primary: '#510006',
+        secondary: '#C5A47E',
+        dark: '#1a1a1a',
+        light: '#f5f5f5',
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)'],
         mono: ['var(--font-geist-mono)'],
       },
-      backgroundImage: {
-        'hero-pattern': "url('/images/fundo_restaurante.jpg')",
+      animation: {
+        'slow-zoom': 'zoom 20s infinite alternate',
+        'fade-in': 'fadeIn 1s ease-out',
+      },
+      keyframes: {
+        zoom: {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        }
       }
     },
   },

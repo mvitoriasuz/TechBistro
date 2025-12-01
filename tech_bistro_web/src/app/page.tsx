@@ -32,8 +32,8 @@ const Header = () => (
       <nav className="w-full flex justify-center items-center">
         <div className="hidden md:flex w-full justify-between items-center max-w-5xl mx-auto">
           <Link href="/" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Início</Link>
-          <Link href="/cardapio" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Cardápio</Link>
-          <Link href="#planos" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Planos</Link>
+          <Link href="/cardapio-demonstrativo" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Funcionalidades</Link>
+          <Link href="/sobre" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Sobre Nós</Link>
           <Link href="#contato" className="text-xs uppercase tracking-[0.25em] hover:text-[#C5A47E] transition-all duration-300 font-medium text-gray-200 hover:text-white">Contato</Link>
         </div>
         
@@ -139,7 +139,7 @@ export default function Home() {
                 </h2>
               </div>
               <div className="hidden md:block pb-2">
-                <Link href="#contato" className="text-xs font-bold text-[#510006] uppercase tracking-widest flex items-center hover:opacity-70 transition-opacity">
+                <Link href="/cardapio-demonstrativo" className="text-xs font-bold text-[#510006] uppercase tracking-widest flex items-center hover:opacity-70 transition-opacity">
                   Saiba Mais <ArrowRight className="ml-2 w-4 h-4" />
                 </Link>
               </div>
@@ -176,7 +176,7 @@ export default function Home() {
               </div>
               <div className="w-full md:w-1/2 flex justify-center">
                 <div className="relative w-full max-w-md aspect-video bg-gradient-to-tr from-black to-[#3a0000] rounded-lg shadow-2xl border border-white/10 flex items-center justify-center overflow-hidden group">
-                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
+                  <div className="absolute inset-0 bg-[url('/images/fundo_restaurante.jpg')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700"></div>
                   <div className="relative z-10 bg-black/50 p-6 backdrop-blur-md border border-white/20">
                      <p className="text-white text-xs tracking-[0.2em] uppercase font-bold">Dashboard Preview</p>
                   </div>
@@ -234,7 +234,7 @@ export default function Home() {
             </div>
 
             <div className="mt-16 text-center">
-              <Link href="#" className="inline-flex items-center text-xs font-bold text-gray-500 hover:text-[#510006] transition-colors uppercase tracking-widest group">
+              <Link href="/cardapio-demonstrativo" className="inline-flex items-center text-xs font-bold text-gray-500 hover:text-[#510006] transition-colors uppercase tracking-widest group">
                 Comparar todos os recursos <ChevronRight className="ml-1 w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -271,18 +271,17 @@ export default function Home() {
                 <h4 className="text-[10px] font-bold text-[#C5A47E] uppercase tracking-widest mb-6">Plataforma</h4>
                 <ul className="space-y-3 text-sm text-white/80">
                   <li><Link href="/" className="hover:text-white transition-colors">Início</Link></li>
-                  <li><Link href="/cardapio" className="hover:text-white transition-colors">Cardápio Digital</Link></li>
+                  <li><Link href="/cardapio-demonstrativo" className="hover:text-white transition-colors">Cardápio Digital</Link></li>
                   <li><Link href="#planos" className="hover:text-white transition-colors">Planos</Link></li>
-                  <li><Link href="/login" className="hover:text-white transition-colors">Área do Cliente</Link></li>
                 </ul>
               </div>
 
               <div>
                 <h4 className="text-[10px] font-bold text-[#C5A47E] uppercase tracking-widest mb-6">Legal</h4>
                 <ul className="space-y-3 text-sm text-white/80">
-                  <li><Link href="#" className="hover:text-white transition-colors">Termos de Uso</Link></li>
-                  <li><Link href="#" className="hover:text-white transition-colors">Privacidade</Link></li>
-                  <li><Link href="#" className="hover:text-white transition-colors">Compliance</Link></li>
+                  <li><Link href="/termos" className="hover:text-white transition-colors">Termos de Uso</Link></li>
+                  <li><Link href="/politica" className="hover:text-white transition-colors">Privacidade</Link></li>
+                  <li><Link href="/sobre" className="hover:text-white transition-colors">Sobre Nós</Link></li>
                 </ul>
               </div>
 

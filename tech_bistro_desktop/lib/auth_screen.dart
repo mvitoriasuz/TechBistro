@@ -18,42 +18,44 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscure = true;
 
-Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _loading = true);
+    setState(() => _loading = true);
 
-  try {
-    final supabase = Supabase.instance.client;
-
-    final response = await supabase.auth.signInWithPassword(
-      email: _emailCtrl.text.trim(),
-      password: _senhaCtrl.text.trim(),
-    );
-
-    // LOGIN FUNCIONOU
-    if (response.user != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+    try {
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailCtrl.text.trim(),
+        password: _senhaCtrl.text.trim(),
       );
-      return;
+
+      if (response.user != null) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erro: ${e.message}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erro inesperado: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-
-    // FALHA DE LOGIN
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Credenciais inválidas")),
-    );
-
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Erro ao entrar: $e")),
-    );
-  } finally {
-    if (mounted) setState(() => _loading = false);
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +81,6 @@ Future<void> _login() async {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // TÍTULO
                 Text(
                   'TECHBISTRO',
                   style: TextStyle(
@@ -92,7 +93,7 @@ Future<void> _login() async {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Acesso ao sistema',
+                  'Acesso Administrativo',
                   style: TextStyle(
                     fontFamily: 'Nats',
                     color: AppColors.secondary,
@@ -100,48 +101,59 @@ Future<void> _login() async {
                   ),
                 ),
                 const SizedBox(height: 40),
-
-                // FORM
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      _buildField(
+                      TextFormField(
                         controller: _emailCtrl,
-                        label: "E-mail",
-                        icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(fontFamily: 'Nats', color: AppColors.textDark),
+                        decoration: InputDecoration(
+                          labelText: "E-mail",
+                          labelStyle: TextStyle(fontFamily: 'Nats', color: AppColors.secondary),
+                          prefixIcon: Icon(Icons.email_outlined, color: AppColors.secondary),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return "Digite seu e-mail";
-                          if (!v.contains("@")) return "E-mail inválido";
+                          if (v == null || v.isEmpty) return "Digite o e-mail";
                           return null;
                         },
                       ),
                       const SizedBox(height: 20),
-
-                      _buildField(
+                      TextFormField(
                         controller: _senhaCtrl,
-                        label: "Senha",
-                        icon: Icons.lock_outline,
                         obscureText: _obscure,
+                        style: TextStyle(fontFamily: 'Nats', color: AppColors.textDark),
+                        decoration: InputDecoration(
+                          labelText: "Senha",
+                          labelStyle: TextStyle(fontFamily: 'Nats', color: AppColors.secondary),
+                          prefixIcon: Icon(Icons.lock_outline, color: AppColors.secondary),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscure ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.secondary,
+                            ),
+                            onPressed: () => setState(() => _obscure = !_obscure),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return "Digite sua senha";
-                          if (v.length < 3) return "Senha curta demais";
+                          if (v == null || v.isEmpty) return "Digite a senha";
                           return null;
                         },
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscure ? Icons.visibility_off : Icons.visibility,
-                            color: AppColors.secondary,
-                          ),
-                          onPressed: () {
-                            setState(() => _obscure = !_obscure);
-                          },
-                        ),
                       ),
                       const SizedBox(height: 30),
-
-                      // BOTÃO ENTRAR
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -149,74 +161,29 @@ Future<void> _login() async {
                           onPressed: _loading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            elevation: 3,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: _loading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
                                   "Entrar",
                                   style: TextStyle(
                                     fontFamily: 'Nats',
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
                                     color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // CAMPO ESTILIZADO
-  Widget _buildField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      validator: validator,
-      keyboardType: keyboardType,
-      style: TextStyle(
-        fontFamily: 'Nats',
-        color: AppColors.textDark,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          fontFamily: 'Nats',
-          color: AppColors.secondary,
-        ),
-        prefixIcon: Icon(icon, color: AppColors.secondary),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: AppColors.background,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.secondary.withOpacity(0.3)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
     );

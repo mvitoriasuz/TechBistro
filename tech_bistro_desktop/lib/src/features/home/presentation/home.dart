@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list.dart';
-import 'package:tech_bistro_desktop/src/features/usuario/presentation/usuario_list_view.dart';
+import 'package:tech_bistro_desktop/src/features/usuario/presentation/usuario.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,7 +25,6 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
       body: Row(
         children: [
-          // Sidebar
           Container(
             width: 220,
             color: AppColors.primaryDark,
@@ -53,7 +52,6 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Menu lateral
                 Expanded(
                   child: ListView.builder(
                     itemCount: menuItems.length,
@@ -104,7 +102,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Conteúdo principal
           Expanded(
             child: Container(
               color: AppColors.background,
@@ -116,11 +113,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Troca de tela conforme clique no menu
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
-        return const UsuarioListView();
+        return const UsuarioPage();
       case 1:
         return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:

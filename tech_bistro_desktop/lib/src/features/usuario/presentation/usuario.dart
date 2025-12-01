@@ -11,11 +11,10 @@ class UsuarioPage extends StatefulWidget {
 }
 
 class _UsuarioPageState extends State<UsuarioPage> {
-  String screen = "list"; // list | create | edit
+  String screen = "list";
   Map<String, dynamic>? usuarioSelecionado;
 
   void refreshList() {
-    // Apenas recarrega a tela voltando para a listagem
     setState(() {
       screen = "list";
     });

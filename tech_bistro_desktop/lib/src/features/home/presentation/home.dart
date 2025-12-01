@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list.dart';
 import 'package:tech_bistro_desktop/src/features/usuario/presentation/usuario.dart';
+import 'package:tech_bistro_desktop/src/features/suporte/presentation/suporte_admin_page.dart'; 
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,12 +15,47 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
+  int _pendingSupportCount = 0;
+  Timer? _notificationTimer;
 
   final List<String> menuItems = [
     'Usuário',
     'Cardápio',
     'Relatório',
+    'Suporte',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotificationCount();
+    _notificationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _fetchNotificationCount();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchNotificationCount() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('suporte_chamados')
+          .count(CountOption.exact)
+          .eq('status', 'pendente');
+      
+      if (mounted) {
+        setState(() {
+          _pendingSupportCount = response;
+        });
+      }
+    } catch (e) {
+      debugPrint("Erro ao buscar notificações: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +74,7 @@ class _HomePageState extends State<HomePage> {
                   height: 60,
                   width: 60,
                   errorBuilder: (context, error, stackTrace) {
-                    print(error);
-                    return const Text("ERRO AO CARREGAR IMAGEM");
+                    return const Icon(Icons.error, color: Colors.white);
                   },
                 ),
                 const SizedBox(height: 10),
@@ -57,8 +94,15 @@ class _HomePageState extends State<HomePage> {
                     itemCount: menuItems.length,
                     itemBuilder: (context, index) {
                       final isSelected = index == selectedIndex;
+                      final itemName = menuItems[index];
+                      
                       return InkWell(
-                        onTap: () => setState(() => selectedIndex = index),
+                        onTap: () {
+                          setState(() => selectedIndex = index);
+                          if (itemName == 'Suporte') {
+                            _fetchNotificationCount();
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                           color: isSelected
@@ -75,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                menuItems[index],
+                                itemName,
                                 style: TextStyle(
                                   color: isSelected
                                       ? AppColors.secondary
@@ -84,6 +128,24 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
+                              if (itemName == 'Suporte' && _pendingSupportCount > 0) ...[
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    _pendingSupportCount > 9 ? '9+' : '$_pendingSupportCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ]
                             ],
                           ),
                         ),
@@ -121,6 +183,8 @@ class _HomePageState extends State<HomePage> {
         return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:
         return const Center(child: Text("Tela de Relatório", style: TextStyle(fontSize: 28)));
+      case 3:
+        return const SuporteAdminPage();
       default:
         return const Center(child: Text("Bem-vindo!", style: TextStyle(fontSize: 28)));
     }
@@ -134,6 +198,8 @@ class _HomePageState extends State<HomePage> {
         return Icons.restaurant;
       case 2:
         return Icons.bar_chart;
+      case 3:
+        return Icons.headset_mic;
       default:
         return Icons.circle;
     }

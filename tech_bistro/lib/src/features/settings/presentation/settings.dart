@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../auth/presentation/login_screen.dart';
 import 'theme_controller.dart';
 import 'politica_privacidade.dart';
 import 'termos_uso.dart';
@@ -192,6 +193,12 @@ class SettingsPage extends ConsumerWidget {
                               tooltip: 'Sair',
                               onPressed: () async {
                                 await Supabase.instance.client.auth.signOut();
+                                if (context.mounted) {
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                    (route) => false,
+                                  );
+                                }
                               },
                             ),
                           ],

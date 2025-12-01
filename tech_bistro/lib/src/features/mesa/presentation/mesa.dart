@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/constants/app_colors.dart';
 import 'package:techbistro/src/features/home/presentation/home_screen.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 import 'new_order.dart';
 
-class MesaPage extends StatefulWidget {
+class MesaPage extends ConsumerStatefulWidget {
   final int numeroMesa;
 
   const MesaPage({super.key, required this.numeroMesa});
 
   @override
-  State<MesaPage> createState() => _MesaPageState();
+  ConsumerState<MesaPage> createState() => _MesaPageState();
 }
 
-class _MesaPageState extends State<MesaPage> {
+class _MesaPageState extends ConsumerState<MesaPage> {
   final supabase = Supabase.instance.client;
-
-  final Color primaryRed = const Color(0xFF840011);
-  final Color backgroundApp = const Color(0xFFF8F9FA);
-  final Color successGreen = const Color(0xFF2E7D32);
-  final Color darkText = const Color(0xFF2D2D2D);
 
   bool loading = true;
   double totalPedido = 0.0;
@@ -100,13 +96,17 @@ class _MesaPageState extends State<MesaPage> {
       if (mounted) {
         setState(() => loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar pedidos: $e'), backgroundColor: primaryRed),
+          SnackBar(content: Text('Erro ao carregar pedidos: $e'), backgroundColor: const Color(0xFF840011)),
         );
       }
     }
   }
 
   Future<void> _showCloseTableDialog() async {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+
     final bool? confirmClose = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -116,7 +116,7 @@ class _MesaPageState extends State<MesaPage> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
@@ -125,10 +125,10 @@ class _MesaPageState extends State<MesaPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: successGreen.withOpacity(0.1),
+                    color: const Color(0xFF2E7D32).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.check_circle_outline, size: 40, color: successGreen),
+                  child: const Icon(Icons.check_circle_outline, size: 40, color: Color(0xFF2E7D32)),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -137,14 +137,14 @@ class _MesaPageState extends State<MesaPage> {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Nats',
-                    color: darkText,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Pagamentos OK e pedidos entregues.\nDeseja liberar a Mesa ${widget.numeroMesa}?',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 16, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -152,7 +152,13 @@ class _MesaPageState extends State<MesaPage> {
                     Expanded(
                       child: TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: Text('Manter Aberta', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'Manter Aberta', 
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -160,7 +166,7 @@ class _MesaPageState extends State<MesaPage> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryRed,
+                          backgroundColor: const Color(0xFF840011),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -217,13 +223,13 @@ class _MesaPageState extends State<MesaPage> {
           (Route<dynamic> route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mesa ${widget.numeroMesa} fechada e arquivada!'), backgroundColor: successGreen),
+          const SnackBar(content: Text('Mesa fechada e arquivada!'), backgroundColor: Color(0xFF2E7D32)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao fechar mesa: $e'), backgroundColor: primaryRed),
+          SnackBar(content: Text('Erro ao fechar mesa: $e'), backgroundColor: const Color(0xFF840011)),
         );
       }
     }
@@ -231,11 +237,27 @@ class _MesaPageState extends State<MesaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color subTextColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+    final Color itemBackground = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF8F9FA);
+
+    final List<Color> cardGradient = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
+
     final valorRestante = totalPedido - totalPago;
     final percentualPago = totalPedido > 0 ? totalPago / totalPedido : 0.0;
 
     return Scaffold(
-      backgroundColor: backgroundApp,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -258,7 +280,7 @@ class _MesaPageState extends State<MesaPage> {
               Text(
                 'Gerenciamento de pedidos',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: subTextColor,
                   fontFamily: 'Nats',
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
@@ -271,11 +293,11 @@ class _MesaPageState extends State<MesaPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -297,11 +319,15 @@ class _MesaPageState extends State<MesaPage> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: primaryRed,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: cardGradient,
+                    ),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryRed.withOpacity(0.15),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -380,9 +406,9 @@ class _MesaPageState extends State<MesaPage> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +421,7 @@ class _MesaPageState extends State<MesaPage> {
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Nats',
-                              color: darkText,
+                              color: textColor,
                             ),
                           ),
                         ),
@@ -405,22 +431,22 @@ class _MesaPageState extends State<MesaPage> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.restaurant_menu_rounded, size: 60, color: Colors.grey[300]),
+                                      Icon(Icons.restaurant_menu_rounded, size: 60, color: isDark ? Colors.grey[700] : Colors.grey[300]),
                                       const SizedBox(height: 12),
                                       Text(
                                         'Nenhum pedido realizado.',
-                                        style: TextStyle(color: Colors.grey[400], fontFamily: 'Nats', fontSize: 18),
+                                        style: TextStyle(color: subTextColor, fontFamily: 'Nats', fontSize: 18),
                                       ),
                                     ],
                                   ),
                                 )
-                              : _buildPedidosList(),
+                              : _buildPedidosList(textColor, primaryRed, itemBackground),
                         ),
                         
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: surfaceColor,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
@@ -516,7 +542,7 @@ class _MesaPageState extends State<MesaPage> {
     );
   }
 
-  Widget _buildPedidosList() {
+  Widget _buildPedidosList(Color textColor, Color primaryRed, Color itemBackground) {
     final Map<String, dynamic> pedidosAgrupados = {};
     
     for (var pedido in pedidos) {
@@ -545,7 +571,7 @@ class _MesaPageState extends State<MesaPage> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: backgroundApp,
+            color: itemBackground,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -576,7 +602,7 @@ class _MesaPageState extends State<MesaPage> {
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     fontFamily: 'Nats',
-                    color: darkText,
+                    color: textColor,
                   ),
                 ),
               ),
@@ -586,7 +612,7 @@ class _MesaPageState extends State<MesaPage> {
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   fontFamily: 'Nats',
-                  color: Colors.grey[800],
+                  color: Colors.grey[600],
                 ),
               ),
             ],
@@ -600,6 +626,12 @@ class _MesaPageState extends State<MesaPage> {
     final TextEditingController valorController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     String formaPagamento = 'Crédito';
+    
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final inputFill = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF8F9FA);
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final primaryRed = const Color(0xFF840011);
 
     showDialog(
       context: context,
@@ -608,12 +640,9 @@ class _MesaPageState extends State<MesaPage> {
           builder: (context, setState) {
             return Dialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              backgroundColor: surfaceColor,
               child: Container(
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                ),
                 child: Form(
                   key: formKey,
                   child: Column(
@@ -640,18 +669,20 @@ class _MesaPageState extends State<MesaPage> {
                       const SizedBox(height: 8),
                       Text(
                         'Falta pagar: R\$ ${valorPendente.toStringAsFixed(2)}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                        style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 16),
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
                         controller: valorController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
                         decoration: InputDecoration(
                           hintText: '0.00',
+                          hintStyle: TextStyle(color: Colors.grey[500]),
                           prefixText: 'R\$ ',
+                          prefixStyle: TextStyle(color: textColor),
                           filled: true,
-                          fillColor: backgroundApp,
+                          fillColor: inputFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -668,9 +699,11 @@ class _MesaPageState extends State<MesaPage> {
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: formaPagamento,
+                        dropdownColor: surfaceColor,
+                        style: TextStyle(color: textColor, fontSize: 16),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: backgroundApp,
+                          fillColor: inputFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -696,7 +729,14 @@ class _MesaPageState extends State<MesaPage> {
                             child: TextButton(
                               onPressed: () => Navigator.pop(context),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                              child: Text('Cancelar', style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                'Cancelar', 
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                                  fontSize: 16, 
+                                  fontWeight: FontWeight.bold
+                                )
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -743,7 +783,7 @@ class _MesaPageState extends State<MesaPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Pagamento de R\$ ${valor.toStringAsFixed(2)} ($formaPagamento) registrado!'),
-            backgroundColor: successGreen,
+            backgroundColor: const Color(0xFF2E7D32),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.all(16),
@@ -753,7 +793,7 @@ class _MesaPageState extends State<MesaPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao registrar: $e'), backgroundColor: primaryRed),
+          SnackBar(content: Text('Erro ao registrar: $e'), backgroundColor: const Color(0xFF840011)),
         );
       }
     }

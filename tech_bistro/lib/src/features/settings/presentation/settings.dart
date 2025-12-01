@@ -15,7 +15,6 @@ class SettingsPage extends ConsumerWidget {
     final themeProvider = ref.watch(themeControllerProvider);
     final isDark = themeProvider.isDarkMode;
 
-    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final Color primaryRed = const Color(0xFF840011);
     final Color darkRed = const Color(0xFF510006);
@@ -23,6 +22,10 @@ class SettingsPage extends ConsumerWidget {
     final Color iconColor = isDark ? Colors.white70 : primaryRed;
     final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     final Color dividerColor = isDark ? Colors.grey[800]! : Colors.grey[100]!;
+
+    final List<Color> gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
 
     final user = Supabase.instance.client.auth.currentUser;
     final String userEmail = user?.email ?? 'email@techbistro.com';
@@ -43,22 +46,46 @@ class SettingsPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Ajustes Gerais',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nats',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 34,
+                ),
+              ),
+              Text(
+                'Personalize sua experiência',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: Stack(
         children: [
           Container(
-            height: 300,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isDark 
-                    ? [Colors.black, const Color(0xFF300000)] 
-                    : [darkRed, primaryRed],
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
+                colors: gradientColors,
               ),
             ),
           ),
@@ -91,39 +118,7 @@ class SettingsPage extends ConsumerWidget {
           SafeArea(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Ajustes Gerais',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Nats',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 34,
-                              ),
-                            ),
-                            Text(
-                              'Personalize sua experiência',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 16,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'Nats',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
+                const SizedBox(height: 10),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -207,7 +202,7 @@ class SettingsPage extends ConsumerWidget {
 
                       const SizedBox(height: 30),
 
-                      _buildSectionHeader('PREFERÊNCIAS', isDark),
+                      _buildSectionHeader('PREFERÊNCIAS'),
                       _buildSettingsContainer(
                         surfaceColor,
                         [
@@ -238,7 +233,7 @@ class SettingsPage extends ConsumerWidget {
 
                       const SizedBox(height: 24),
 
-                      _buildSectionHeader('SUPORTE', isDark),
+                      _buildSectionHeader('SUPORTE'),
                       _buildSettingsContainer(
                         surfaceColor,
                         [
@@ -260,7 +255,7 @@ class SettingsPage extends ConsumerWidget {
 
                       const SizedBox(height: 24),
 
-                      _buildSectionHeader('SOBRE', isDark),
+                      _buildSectionHeader('SOBRE'),
                       _buildSettingsContainer(
                         surfaceColor,
                         [
@@ -308,10 +303,10 @@ class SettingsPage extends ConsumerWidget {
                       Center(
                         child: Column(
                           children: [
-                            Text(
+                            const Text(
                               'TechBistro',
                               style: TextStyle(
-                                color: subtitleColor,
+                                color: Colors.white,
                                 fontFamily: 'Nats',
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -319,7 +314,10 @@ class SettingsPage extends ConsumerWidget {
                             ),
                             Text(
                               'Desenvolvido por Bruno, Maria Vitoria e Rafaela',
-                              style: TextStyle(color: subtitleColor.withOpacity(0.7), fontSize: 12),
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -336,14 +334,14 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isDark) {
+  Widget _buildSectionHeader(String title) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(left: 16, bottom: 8),
       child: Text(
         title,
         style: TextStyle(
-          color: isDark ? Colors.grey[400] : const Color(0xFF840011),
+          color: Colors.white.withOpacity(0.9),
           fontSize: 12,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,

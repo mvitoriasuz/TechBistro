@@ -229,7 +229,6 @@ class _HistoricoEntregaPageState extends ConsumerState<HistoricoEntregaPage> {
     final isDark = themeProvider.isDarkMode;
 
     final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F7FA);
-    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
     final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
     final Color primaryRed = const Color(0xFF840011);
@@ -389,6 +388,13 @@ class _HistoricoEntregaPageState extends ConsumerState<HistoricoEntregaPage> {
     final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    
+    final primaryRed = const Color(0xFF840011);
+    final darkRed = const Color(0xFF510006);
+
+    final gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -409,9 +415,13 @@ class _HistoricoEntregaPageState extends ConsumerState<HistoricoEntregaPage> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Color(0xFF840011),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradientColors,
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

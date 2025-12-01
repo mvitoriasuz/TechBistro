@@ -20,10 +20,9 @@ class _UsuarioListViewState extends State<UsuarioListView> {
   bool loading = true;
 
   final Map<int, String> hierarquiaNomes = {
-    1: 'Administrador',
+    1: 'Garçom/Cozinha',
     2: 'Gerente',
-    3: 'Atendente',
-    4: 'Cozinha',
+    3: 'Caixa/Admin',
   };
 
   @override

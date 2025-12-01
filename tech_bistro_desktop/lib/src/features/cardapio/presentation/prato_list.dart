@@ -28,7 +28,9 @@ class _PratoListPageState extends State<PratoListPage> {
     try {
       pratos = await service.listarPratos(widget.idEstabelecimento);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao carregar pratos: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar pratos: $e')),
+      );
     } finally {
       setState(() => loading = false);
     }
@@ -50,44 +52,169 @@ class _PratoListPageState extends State<PratoListPage> {
       await service.deletarPrato(id);
       _carregarPratos();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao deletar prato: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao deletar prato: $e')),
+      );
     }
   }
+  Widget _buildTabelaAgrupada() {
+  Map<String, List<Map<String, dynamic>>> grupos = {};
+
+  for (var p in pratos) {
+    String categoria = p['categoria_prato'] ?? 'Sem Categoria';
+    grupos.putIfAbsent(categoria, () => []);
+    grupos[categoria]!.add(p);
+  }
+
+  return SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: grupos.entries.map((grupo) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                grupo.key,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2A2A2A),
+                ),
+              ),
+            ),
+            DataTable(
+              columns: const [
+                DataColumn(label: Text("Nome")),
+                DataColumn(label: Text("Valor")),
+                DataColumn(label: Text("Ações")),
+              ],
+              rows: grupo.value.map((p) {
+                return DataRow(
+                  cells: [
+                    DataCell(Text(p['nome_prato'])),
+                    DataCell(Text(
+                        "R\$ ${p['valor_prato'].toStringAsFixed(2)}")),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _abrirForm(prato: p),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deletarPrato(p['id']),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      }).toList(),
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () => _abrirForm(),
-        child: const Icon(Icons.add),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : pratos.isEmpty
-              ? const Center(child: Text('Nenhum prato encontrado'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: pratos.length,
-                  itemBuilder: (_, i) {
-                    final p = pratos[i];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      child: ListTile(
-                        title: Text(p['nome_prato']),
-                        subtitle: Text('${p['categoria_prato']} • R\$ ${p['valor_prato'].toStringAsFixed(2)}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(onPressed: () => _abrirForm(prato: p), icon: const Icon(Icons.edit, color: Colors.orange)),
-                            IconButton(onPressed: () => _deletarPrato(p['id']), icon: const Icon(Icons.delete, color: Colors.red)),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Pratos do Cardápio",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2A2A2A),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _abrirForm(),
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  "Novo Prato",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          Expanded(
+            child: loading
+                ? const Center(child: CircularProgressIndicator())
+                : pratos.isEmpty
+                    ? const Center(child: Text("Nenhum prato encontrado."))
+                    : SingleChildScrollView(
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text("Nome")),
+                            DataColumn(label: Text("Categoria")),
+                            DataColumn(label: Text("Valor")),
+                            DataColumn(label: Text("Ações")),
                           ],
+                          rows: pratos.map((p) {
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(p['nome_prato'])),
+                                DataCell(Text(p['categoria_prato'] ?? '-')),
+                                DataCell(Text(
+                                    "R\$ ${p['valor_prato'].toStringAsFixed(2)}")),
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
+                                        onPressed: () =>
+                                            _abrirForm(prato: p),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            color: Colors.red),
+                                        onPressed: () =>
+                                            _deletarPrato(p['id']),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
-                    );
-                  },
-                ),
+          ),
+        ],
+      ),
     );
   }
 }

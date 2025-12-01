@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/historico_mesa.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -17,6 +17,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<HistoricoMesa> _dados = [];
   
   double faturamentoTotal = 0;
+  
   int totalAtendimentos = 0;
   double ticketMedio = 0;
   List<Map<String, dynamic>> faturamentoSemanal = [];

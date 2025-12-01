@@ -158,6 +158,29 @@ class _MesaPageState extends State<MesaPage> {
 
   Future<void> _performCloseTable() async {
     try {
+      final pedidosHistorico = pedidos.map((p) {
+        return {
+          'prato': p['pratos']?['nome_prato'],
+          'qtd': p['qtd_pedido'],
+          'valor_unitario': p['pratos']?['valor_prato'],
+          'status': p['status_pedido']
+        };
+      }).toList();
+
+      final pagamentosResponse = await supabase
+          .from('pagamento')
+          .select('valor_pagamento, forma_pagamento')
+          .eq('id_mesa', widget.numeroMesa);
+
+      final pagamentosHistorico = (pagamentosResponse as List).map((p) => p).toList();
+
+      await supabase.from('historico_mesas').insert({
+        'numero_mesa': widget.numeroMesa,
+        'valor_total': totalPedido,
+        'itens_pedido': pedidosHistorico,
+        'pagamentos': pagamentosHistorico,
+      });
+
       await supabase.from('pagamento').delete().eq('id_mesa', widget.numeroMesa);
       await supabase.from('pedidos').delete().eq('id_mesa', widget.numeroMesa);
       await supabase.from('mesas').delete().eq('numero', widget.numeroMesa);
@@ -169,7 +192,7 @@ class _MesaPageState extends State<MesaPage> {
           (Route<dynamic> route) => false,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mesa ${widget.numeroMesa} fechada com sucesso!'), backgroundColor: successGreen),
+          SnackBar(content: Text('Mesa ${widget.numeroMesa} fechada e arquivada!'), backgroundColor: successGreen),
         );
       }
     } catch (e) {

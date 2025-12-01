@@ -19,8 +19,8 @@ class _SalaoPageState extends State<SalaoPage> {
   StreamSubscription<List<Map<String, dynamic>>>? _mesasSubscription;
   
   final Color primaryRed = const Color(0xFF840011);
-  final Color darkRed = const Color(0xFF510006);
   final Color backgroundLight = const Color(0xFFF8F9FA);
+  final Color darkText = const Color(0xFF2D2D2D);
   
   @override
   void initState() {
@@ -72,26 +72,34 @@ class _SalaoPageState extends State<SalaoPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Qual o número da nova mesa?',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(color: Colors.grey[600], fontSize: 16),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: mesaController,
                 keyboardType: TextInputType.number,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryRed),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryRed, fontFamily: 'Nats'),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   hintText: '00',
-                  hintStyle: TextStyle(color: Colors.grey[300]),
+                  hintStyle: TextStyle(color: Colors.grey[300], fontFamily: 'Nats'),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Colors.grey[50],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: Colors.grey[200]!),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: primaryRed, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 20),
                 ),
                 validator: (value) {
                   final numero = int.tryParse(value ?? '');
@@ -108,6 +116,7 @@ class _SalaoPageState extends State<SalaoPage> {
             label: 'Cancelar',
             color: Colors.grey[600]!,
             onPressed: () => Navigator.pop(context),
+            isPrimary: false,
           ),
           _buildDialogButton(
             label: 'Adicionar',
@@ -134,56 +143,174 @@ class _SalaoPageState extends State<SalaoPage> {
   Future<void> _confirmarExclusaoMesa(int numeroMesa) async {
     final supabase = Supabase.instance.client;
     try {
-      final pedidos = await supabase.from('pedidos').select('qtd_pedido, pratos (valor_prato)').eq('id_mesa', numeroMesa);
+      final pedidosResponse = await supabase
+          .from('pedidos')
+          .select('qtd_pedido, status_pedido, pratos (nome_prato, valor_prato)')
+          .eq('id_mesa', numeroMesa);
       
-      showDialog(
-        context: context,
-        builder: (context) => _buildModernDialog(
-          title: 'Excluir Mesa $numeroMesa?',
-          icon: Icons.delete_forever_rounded,
-          iconColor: Colors.red[700],
-          content: Text(
-            'Todos os pedidos e histórico desta mesa serão apagados. Deseja continuar?',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[700], height: 1.5),
+      final pagamentosResponse = await supabase
+          .from('pagamento')
+          .select('valor_pagamento, forma_pagamento')
+          .eq('id_mesa', numeroMesa);
+
+      double totalConsumido = 0.0;
+      bool temPedidosPendentes = false;
+      
+      final List<Map<String, dynamic>> itensParaHistorico = [];
+
+      for (var p in pedidosResponse) {
+        final qtd = (p['qtd_pedido'] as num).toInt();
+        final valor = (p['pratos']?['valor_prato'] as num).toDouble();
+        final status = p['status_pedido'] as String;
+        
+        totalConsumido += (qtd * valor);
+        
+        itensParaHistorico.add({
+          'prato': p['pratos']?['nome_prato'],
+          'qtd': qtd,
+          'valor_unitario': valor,
+          'status': status
+        });
+
+        if (status != 'entregue' && status != 'pronto') {
+          temPedidosPendentes = true;
+        }
+      }
+
+      double totalPago = 0.0;
+      final List<Map<String, dynamic>> pagsParaHistorico = [];
+      
+      for (var pag in pagamentosResponse) {
+        final valor = (pag['valor_pagamento'] as num).toDouble();
+        totalPago += valor;
+        pagsParaHistorico.add(pag);
+      }
+
+      final faltaPagar = totalConsumido - totalPago;
+
+      if (temPedidosPendentes) {
+        if (mounted) {
+           _showBloqueioDialog(
+            'Pedidos em Andamento', 
+            'Esta mesa possui pedidos sendo preparados ou pendentes. Aguarde a finalização ou entrega para fechar a mesa.'
+          );
+        }
+        return;
+      }
+
+      if (faltaPagar > 0.1) { 
+        if (mounted) {
+           _showBloqueioDialog(
+            'Pagamento Pendente', 
+            'A conta ainda não foi totalmente paga. Faltam R\$ ${faltaPagar.toStringAsFixed(2)}.'
+          );
+        }
+        return;
+      }
+      
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => _buildModernDialog(
+            title: 'Encerrar Atendimento?',
+            icon: Icons.assignment_turned_in_rounded,
+            iconColor: primaryRed,
+            content: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: TextStyle(color: Colors.grey[700], fontSize: 16, height: 1.5, fontFamily: 'Roboto'),
+                children: [
+                  const TextSpan(text: 'A Mesa '),
+                  TextSpan(text: '$numeroMesa', style: TextStyle(fontWeight: FontWeight.bold, color: darkText)),
+                  const TextSpan(text: ' será arquivada.\nTodos os pedidos foram entregues e a conta quitada.'),
+                ],
+              ),
+            ),
+            actions: [
+              _buildDialogButton(
+                label: 'Voltar',
+                color: Colors.grey[600]!,
+                onPressed: () => Navigator.pop(context),
+                isPrimary: false,
+              ),
+              _buildDialogButton(
+                label: 'FINALIZAR',
+                color: primaryRed,
+                isPrimary: true,
+                onPressed: () async {
+                  try {
+                    await supabase.from('historico_mesas').insert({
+                      'numero_mesa': numeroMesa,
+                      'valor_total': totalConsumido,
+                      'itens_pedido': itensParaHistorico,
+                      'pagamentos': pagsParaHistorico,
+                    });
+
+                    await supabase.from('pagamento').delete().eq('id_mesa', numeroMesa);
+                    await supabase.from('pedidos').delete().eq('id_mesa', numeroMesa);
+                    await supabase.from('mesas').delete().eq('numero', numeroMesa);
+                    
+                    setState(() => mesas.remove(numeroMesa));
+                    if(mounted) {
+                      Navigator.pop(context);
+                      _showSnackBar('Mesa $numeroMesa finalizada com sucesso.', isError: false);
+                    }
+                  } catch(e) {
+                    if (mounted) {
+                       Navigator.pop(context);
+                       _showSnackBar('Erro ao finalizar: $e', isError: true);
+                    }
+                  }
+                },
+              ),
+            ],
           ),
-          actions: [
-             _buildDialogButton(
-              label: 'Voltar',
-              color: Colors.grey[600]!,
-              onPressed: () => Navigator.pop(context),
-            ),
-             _buildDialogButton(
-              label: 'Excluir',
-              color: Colors.red,
-              isPrimary: true,
-              onPressed: () async {
-                try {
-                  await supabase.from('mesas').delete().eq('numero', numeroMesa);
-                  setState(() => mesas.remove(numeroMesa));
-                  Navigator.pop(context);
-                  _showSnackBar('Mesa $numeroMesa excluída.', isError: false);
-                } catch(e) {
-                  // erro silencioso ou log
-                }
-              },
-            ),
-          ],
-        ),
-      );
+        );
+      }
     } catch (e) {
-      _showSnackBar('Erro de conexão.', isError: true);
+      _showSnackBar('Erro de conexão: $e', isError: true);
     }
+  }
+
+  void _showBloqueioDialog(String title, String msg) {
+    showDialog(
+      context: context,
+      builder: (context) => _buildModernDialog(
+        title: title,
+        icon: Icons.warning_amber_rounded,
+        iconColor: Colors.amber[800],
+        content: Text(
+          msg,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey[700], height: 1.5, fontSize: 15),
+        ),
+        actions: [
+          _buildDialogButton(
+            label: 'Entendi',
+            color: primaryRed,
+            isPrimary: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
+        content: Row(
+          children: [
+            Icon(isError ? Icons.error_outline : Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(msg, style: const TextStyle(fontWeight: FontWeight.w500))),
+          ],
+        ),
         backgroundColor: isError ? primaryRed : const Color(0xFF2E7D32),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }
@@ -229,7 +356,7 @@ class _SalaoPageState extends State<SalaoPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withOpacity(0.08),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -259,11 +386,18 @@ class _SalaoPageState extends State<SalaoPage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.storefront_outlined, size: 80, color: Colors.grey[300]),
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.storefront_outlined, size: 60, color: Colors.grey[400]),
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Nenhuma mesa ativa',
-                              style: TextStyle(color: Colors.grey[400], fontSize: 18),
+                              style: TextStyle(color: Colors.grey[400], fontSize: 18, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -293,6 +427,7 @@ class _SalaoPageState extends State<SalaoPage> {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
       ),
@@ -303,21 +438,21 @@ class _SalaoPageState extends State<SalaoPage> {
     return Container(
       decoration: BoxDecoration(
         color: primaryRed,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryRed.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: primaryRed.withOpacity(0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           onTap: () {
-             Navigator.push(
+              Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => MesaPage(numeroMesa: numero)),
             ).then((_) => carregarMesas());
@@ -325,10 +460,10 @@ class _SalaoPageState extends State<SalaoPage> {
           child: Stack(
             children: [
               Positioned(
-                top: -20,
-                left: -20,
+                top: -30,
+                right: -30,
                 child: CircleAvatar(
-                  radius: 50,
+                  radius: 60,
                   backgroundColor: Colors.white.withOpacity(0.05),
                 ),
               ),
@@ -343,18 +478,20 @@ class _SalaoPageState extends State<SalaoPage> {
                       child: PopupMenuButton<String>(
                         icon: const Icon(Icons.more_horiz, color: Colors.white70),
                         padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 4,
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         onSelected: (value) {
                           if (value == 'excluir') _confirmarExclusaoMesa(numero);
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem<String>(
                             value: 'excluir',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                SizedBox(width: 10),
-                                Text('Excluir', style: TextStyle(color: Colors.red)),
+                                Icon(Icons.assignment_turned_in_outlined, color: darkText, size: 20), 
+                                const SizedBox(width: 12),
+                                Text('Finalizar Mesa', style: TextStyle(color: darkText, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ),
@@ -376,29 +513,30 @@ class _SalaoPageState extends State<SalaoPage> {
 
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.15),
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
                     ),
                     child: Column(
                       children: [
                         Text(
                           'MESA',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.7),
-                            letterSpacing: 1.5,
+                            color: Colors.white.withOpacity(0.8),
+                            letterSpacing: 2.0,
                           ),
                         ),
                         Text(
                           '$numero',
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontFamily: 'Nats',
+                            height: 1.0
                           ),
                         ),
                       ],
@@ -421,19 +559,19 @@ class _SalaoPageState extends State<SalaoPage> {
     Color? iconColor,
   }) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
             ),
           ],
         ),
@@ -442,28 +580,30 @@ class _SalaoPageState extends State<SalaoPage> {
           children: [
             if (icon != null) ...[
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: (iconColor ?? primaryRed).withOpacity(0.1),
+                  color: (iconColor ?? primaryRed).withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 32, color: iconColor ?? primaryRed),
+                child: Icon(icon, size: 36, color: iconColor ?? primaryRed),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
             ],
             Text(
               title,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2D2D2D),
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 16),
             content,
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Row(
-              children: actions.map((e) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: e))).toList(),
+              children: actions.map((e) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: e))).toList(),
             ),
           ],
         ),
@@ -477,20 +617,35 @@ class _SalaoPageState extends State<SalaoPage> {
     required VoidCallback onPressed,
     bool isPrimary = false,
   }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        elevation: 0,
-        backgroundColor: isPrimary ? color : Colors.white,
-        foregroundColor: isPrimary ? Colors.white : color,
-        side: isPrimary ? BorderSide.none : BorderSide(color: color.withOpacity(0.3)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-    );
+    if (isPrimary) {
+      return ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 1.0),
+        ),
+      );
+    } else {
+      return TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.grey[600],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: Colors.grey[100],
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        ),
+      );
+    }
   }
 }

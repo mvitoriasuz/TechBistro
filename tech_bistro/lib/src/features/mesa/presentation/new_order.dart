@@ -106,10 +106,15 @@ class _NewOrderState extends State<NewOrder> {
           'horario_pedido': agora.toIso8601String().substring(11, 16),
         });
       }
-      _mostrarSnackBar('Pedido enviado com sucesso!');
-      Navigator.pop(context);
+      
+      if (mounted) {
+        _mostrarSnackBar('Pedido enviado com sucesso!');
+        Navigator.pop(context);
+      }
     } catch (e) {
-      _mostrarSnackBar('Erro ao enviar pedido: $e', isError: true);
+      if (mounted) {
+        _mostrarSnackBar('Erro ao enviar pedido: $e', isError: true);
+      }
     }
   }
 
@@ -260,6 +265,9 @@ class _NewOrderState extends State<NewOrder> {
                   onPressed: () {
                     final alergicos = alergicoController.text.trim();
                     final obs = obsAdicionaisController.text.trim();
+                    
+                    Navigator.of(context).pop();
+
                     _enviarPedido(
                       pedidoFinal,
                       obs.isEmpty ? null : obs,

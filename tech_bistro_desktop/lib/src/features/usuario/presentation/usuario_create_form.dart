@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 import 'dart:math';
 
 class UsuarioCreateForm extends StatefulWidget {
@@ -18,165 +19,272 @@ class UsuarioCreateForm extends StatefulWidget {
 
 class _UsuarioCreateFormState extends State<UsuarioCreateForm> {
   final _formKey = GlobalKey<FormState>();
-  final supabase = Supabase.instance.client;
+  
+  final _nomeCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _senhaCtrl = TextEditingController();
+  final _confirmaSenhaCtrl = TextEditingController();
 
-  final TextEditingController displayName = TextEditingController();
-  final TextEditingController email = TextEditingController();
-  final TextEditingController phone = TextEditingController();
-  final TextEditingController senha = TextEditingController();
+  bool _loading = false;
+  int? _hierarquiaSelecionada;
 
-  bool loading = false;
+  final List<Map<String, dynamic>> _hierarquias = [
+    {'id': 1, 'nome': 'Apenas App (Garçom/Cozinha)'},
+    {'id': 2, 'nome': 'App e Desktop (Gerente)'},
+    {'id': 3, 'nome': 'Apenas Desktop (Caixa/Admin)'},
+  ];
 
-  List<Map<String, dynamic>> hierarquias = [];
-  int? hierarquiaSelecionada;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHierarquias();
+  String _gerarCodigoUnico() {
+    const chars = '0123456789';
+    final rand = Random();
+    return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
-  Future<void> _loadHierarquias() async {
-    setState(() => loading = true);
-    try {
-      final response = await supabase.from('hierarquias').select();
-      hierarquias = List<Map<String, dynamic>>.from(response);
-      setState(() {});
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Erro ao carregar hierarquias")),
-      );
-    } finally {
-      setState(() => loading = false);
-    }
-  }
-
-  Future<void> criarUsuario() async {
+  Future<void> _criarUsuario() async {
     if (!_formKey.currentState!.validate()) return;
-    if (hierarquiaSelecionada == null) {
+    if (_hierarquiaSelecionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Selecione uma hierarquia")),
       );
       return;
     }
 
-    setState(() => loading = true);
+    setState(() => _loading = true);
 
     try {
-      final nomeHierarquia = hierarquias
-          .firstWhere((h) => h['id'] == hierarquiaSelecionada)['nome'];
+      final adminUser = Supabase.instance.client.auth.currentUser;
+      final estabelecimentoId = adminUser?.userMetadata?['estabelecimento_id'] ?? '';
+      final cnpj = adminUser?.userMetadata?['cnpj'] ?? estabelecimentoId;
 
-      // Gerar código único se for Garçom ou Cozinha
+      final tempClient = SupabaseClient(
+        'https://hliczkulyvskjjbigvvk.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaWN6a3VseXZza2pqYmlndnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MzgyMTEsImV4cCI6MjA2MjQxNDIxMX0.qexOzbr1wBH6D07pk2wgAJTI1GidrAXrpMZSZzl-0NE',
+        authOptions: const AuthClientOptions(
+          authFlowType: AuthFlowType.implicit,
+        ),
+      );
+
       String? codigoAcesso;
-      if (nomeHierarquia == "Garçom" || nomeHierarquia == "Cozinha") {
+      if (_hierarquiaSelecionada == 1 || _hierarquiaSelecionada == 2) {
         codigoAcesso = _gerarCodigoUnico();
       }
 
-      await supabase.from('users_profile').insert({
-        'name': displayName.text.trim(),
-        'email': email.text.trim(),
-        'phone': phone.text.trim(),
-        'senha': senha.text.trim(),
-        'hierarquia_id': hierarquiaSelecionada,
-        'role': nomeHierarquia,
-        'codigo_acesso': codigoAcesso, // novo campo
-        'created_at': DateTime.now().toIso8601String(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Usuário criado com sucesso!")),
+      final response = await tempClient.auth.signUp(
+        email: _emailCtrl.text.trim(),
+        password: _senhaCtrl.text.trim(),
+        data: {
+          'full_name': _nomeCtrl.text.trim(),
+          'hierarquia': _hierarquiaSelecionada,
+          'phone': _phoneCtrl.text.trim(),
+          'estabelecimento_id': estabelecimentoId,
+          'cnpj': cnpj,
+          'codigo_acesso': codigoAcesso,
+          'role': 'funcionario',
+        },
       );
 
-      widget.onSaved();
-      widget.onCancel();
-    } catch (e) {
+      await tempClient.dispose();
+
+      if (response.user != null) {
+        if (codigoAcesso != null) {
+            try {
+                await Supabase.instance.client.from('users_profile').update({
+                    'codigo_acesso': codigoAcesso,
+                }).eq('id', response.user!.id);
+            } catch (_) {} 
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Usuário criado com sucesso!")),
+        );
+        widget.onSaved();
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao criar usuário: $e")),
+        SnackBar(content: Text("Erro de Auth: ${e.message}"), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erro ao criar: $e"), backgroundColor: Colors.red),
       );
     } finally {
-      setState(() => loading = false);
+      if (mounted) setState(() => _loading = false);
     }
-  }
-
-  // Função para gerar código único de 6 caracteres
-  String _gerarCodigoUnico() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rand = Random();
-    return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(24),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Criar Usuário",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: displayName,
-                decoration: const InputDecoration(labelText: "Nome"),
-                validator: (v) => v!.isEmpty ? "Informe o nome" : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: email,
-                decoration: const InputDecoration(labelText: "Email"),
-                validator: (v) => v!.isEmpty ? "Informe o email" : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: phone,
-                decoration: const InputDecoration(labelText: "Telefone"),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: senha,
-                decoration: const InputDecoration(labelText: "Senha"),
-                obscureText: true,
-                validator: (v) => v!.isEmpty ? "Informe a senha" : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                value: hierarquiaSelecionada,
-                decoration: const InputDecoration(labelText: "Hierarquia"),
-                items: hierarquias
-                    .map((h) => DropdownMenuItem<int>(
-                          value: h['id'],
-                          child: Text(h['nome']),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => hierarquiaSelecionada = v),
-                validator: (v) => v == null ? "Selecione uma hierarquia" : null,
-              ),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Card(
+          margin: const EdgeInsets.all(24),
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextButton(
-                    onPressed: widget.onCancel,
-                    child: const Text("Cancelar"),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: widget.onCancel,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Novo Usuário",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: loading ? null : criarUsuario,
-                    child: loading
-                        ? const CircularProgressIndicator()
-                        : const Text("Salvar"),
+                  const SizedBox(height: 30),
+
+                  TextFormField(
+                    controller: _nomeCtrl,
+                    decoration: _inputDecoration("Nome Completo", Icons.person),
+                    validator: (v) => v!.isEmpty ? "Informe o nome" : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _emailCtrl,
+                          decoration: _inputDecoration("E-mail", Icons.email),
+                          validator: (v) => v!.contains("@") ? null : "E-mail inválido",
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _phoneCtrl,
+                          decoration: _inputDecoration("Telefone", Icons.phone),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  DropdownButtonFormField<int>(
+                    value: _hierarquiaSelecionada,
+                    decoration: _inputDecoration("Hierarquia", Icons.work),
+                    items: _hierarquias.map((h) {
+                      return DropdownMenuItem<int>(
+                        value: h['id'],
+                        child: Text(h['nome']),
+                      );
+                    }).toList(),
+                    onChanged: (v) => setState(() => _hierarquiaSelecionada = v),
+                    validator: (v) => v == null ? "Obrigatório" : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _senhaCtrl,
+                          obscureText: true,
+                          decoration: _inputDecoration("Senha", Icons.lock),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return "Informe a senha";
+                            if (v.length < 6) return "Mínimo 6 caracteres";
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _confirmaSenhaCtrl,
+                          obscureText: true,
+                          decoration: _inputDecoration("Confirmar Senha", Icons.lock_outline),
+                          validator: (v) {
+                            if (v != _senhaCtrl.text) return "Senhas não conferem";
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: widget.onCancel,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey[700],
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        ),
+                        child: const Text("Cancelar"),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: _loading ? null : _criarUsuario,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text(
+                                "Cadastrar",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: AppColors.secondary),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
     );
   }
 }

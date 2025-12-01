@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tech_bistro_desktop/auth_screen.dart';
+import 'package:tech_bistro_desktop/src/features/dashboard/data/dashboard_service_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,4 +25,14 @@ class MyApp extends StatelessWidget {
       home: LoginScreen(),
     );
   }
+}
+
+void testFetch() async {
+  final svc = DashboardServiceApi();
+  final hist = await svc.fetchHistorico();
+  print('registros: ${hist.length}');
+  final pagamentos = await svc.fetchPagamentosResumo();
+  print('pagamentos: $pagamentos');
+  final ticket = await svc.fetchTicketMedio();
+  print('ticket medio: $ticket');
 }

@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/constants/app_colors.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 
-class NewOrder extends StatefulWidget {
+class NewOrder extends ConsumerStatefulWidget {
   final int idMesa;
 
   const NewOrder({super.key, required this.idMesa});
 
   @override
-  State<NewOrder> createState() => _NewOrderState();
+  ConsumerState<NewOrder> createState() => _NewOrderState();
 }
 
-class _NewOrderState extends State<NewOrder> {
+class _NewOrderState extends ConsumerState<NewOrder> {
   final supabase = Supabase.instance.client;
   
-  final Color primaryRed = const Color(0xFF840011);
-  final Color backgroundApp = const Color(0xFFF8F9FA);
-  final Color darkText = const Color(0xFF2D2D2D);
-
   Map<String, List<dynamic>> pratosPorCategoria = {};
   Map<int, int> quantidades = {};
   bool loading = true;
@@ -78,7 +75,7 @@ class _NewOrderState extends State<NewOrder> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensagem, style: const TextStyle(fontFamily: 'Nats', fontWeight: FontWeight.bold)),
-        backgroundColor: isError ? primaryRed : Colors.green[700],
+        backgroundColor: isError ? const Color(0xFF840011) : Colors.green[700],
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
@@ -140,15 +137,20 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   void _showWarningDialog(String message) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Icon(Icons.warning_amber_rounded, size: 40, color: Colors.orange[400]),
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: TextStyle(fontFamily: 'Nats', fontSize: 18, color: darkText),
+          style: TextStyle(fontFamily: 'Nats', fontSize: 18, color: textColor),
         ),
       ),
     );
@@ -160,12 +162,20 @@ class _NewOrderState extends State<NewOrder> {
     bool mostrarAlergico = false;
     bool mostrarObs = false;
 
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[500];
+    final inputFill = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100];
+    final primaryRed = const Color(0xFF840011);
+
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: surfaceColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               title: Column(
                 children: [
@@ -183,7 +193,7 @@ class _NewOrderState extends State<NewOrder> {
                     style: TextStyle(
                       fontSize: 14,
                       fontFamily: 'Nats',
-                      color: Colors.grey[500],
+                      color: subtitleColor,
                     ),
                   ),
                 ],
@@ -218,11 +228,14 @@ class _NewOrderState extends State<NewOrder> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: alergicoController,
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           hintText: 'Ex: Alergia a camarão, glúten...',
+                          hintStyle: TextStyle(color: subtitleColor),
                           labelText: 'Alergias',
+                          labelStyle: TextStyle(color: subtitleColor),
                           filled: true,
-                          fillColor: Colors.red[50],
+                          fillColor: isDark ? const Color(0xFF451010) : Colors.red[50],
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -238,16 +251,19 @@ class _NewOrderState extends State<NewOrder> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: obsAdicionaisController,
+                        style: TextStyle(color: textColor),
                         decoration: InputDecoration(
                           hintText: 'Ex: Sem cebola, ponto da carne...',
+                          hintStyle: TextStyle(color: subtitleColor),
                           labelText: 'Observações Gerais',
+                          labelStyle: TextStyle(color: subtitleColor),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: inputFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          prefixIcon: const Icon(Icons.notes, color: Colors.grey),
+                          prefixIcon: Icon(Icons.notes, color: subtitleColor),
                         ),
                         maxLines: 2,
                         minLines: 1,
@@ -259,7 +275,7 @@ class _NewOrderState extends State<NewOrder> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Voltar', style: TextStyle(color: Colors.grey[600], fontSize: 16, fontFamily: 'Nats', fontWeight: FontWeight.bold)),
+                  child: Text('Voltar', style: TextStyle(color: subtitleColor, fontSize: 16, fontFamily: 'Nats', fontWeight: FontWeight.bold)),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -291,28 +307,34 @@ class _NewOrderState extends State<NewOrder> {
   }
 
   Widget _buildActionButton({required String label, required IconData icon, required bool isActive, required VoidCallback onTap}) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final inactiveColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[800]! : Colors.grey.shade300;
+    final primaryRed = const Color(0xFF840011);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive ? primaryRed : Colors.white,
+          color: isActive ? primaryRed : surfaceColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? primaryRed : Colors.grey.shade300),
+          border: Border.all(color: isActive ? primaryRed : borderColor),
           boxShadow: [
             if (!isActive)
-              BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+              BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.05), blurRadius: 4, offset: const Offset(0, 2))
           ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: isActive ? Colors.white : Colors.grey[600]),
+            Icon(icon, color: isActive ? Colors.white : inactiveColor),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isActive ? Colors.white : Colors.grey[600],
+                color: isActive ? Colors.white : inactiveColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -347,8 +369,20 @@ class _NewOrderState extends State<NewOrder> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color primaryRed = const Color(0xFF840011);
+    final Color darkRed = const Color(0xFF510006);
+    
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color subTextColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+    final Color itemBackground = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF8F9FA);
+
     return Scaffold(
-      backgroundColor: backgroundApp,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -371,7 +405,7 @@ class _NewOrderState extends State<NewOrder> {
               Text(
                 'Mesa ${widget.idMesa}',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: subTextColor,
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                 ),
@@ -383,11 +417,11 @@ class _NewOrderState extends State<NewOrder> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -404,19 +438,21 @@ class _NewOrderState extends State<NewOrder> {
           ? Center(child: CircularProgressIndicator(color: primaryRed))
           : Column(
               children: [
-                _buildCategoriesSelector(),
+                _buildCategoriesSelector(surfaceColor, primaryRed, darkRed),
                 Expanded(
                   child: pratosPorCategoria.isEmpty
-                      ? _buildEmptyState()
-                      : _buildPratosList(),
+                      ? _buildEmptyState(subTextColor)
+                      : _buildPratosList(surfaceColor, textColor, primaryRed, itemBackground),
                 ),
-                _buildBottomSummary(),
+                _buildBottomSummary(surfaceColor, subTextColor, textColor, primaryRed),
               ],
             ),
     );
   }
 
-  Widget _buildCategoriesSelector() {
+  Widget _buildCategoriesSelector(Color surfaceColor, Color primaryRed, Color darkRed) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    
     return Container(
       height: 60,
       width: double.infinity,
@@ -429,15 +465,27 @@ class _NewOrderState extends State<NewOrder> {
         itemBuilder: (context, index) {
           final categoria = categoriasOrdenadas[index];
           final isSelected = categoria == categoriaSelecionada;
+          
           return GestureDetector(
             onTap: () => setState(() => categoriaSelecionada = categoria),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? primaryRed : Colors.white,
+                color: isSelected 
+                    ? (isDark ? const Color(0xFF300000) : primaryRed)
+                    : surfaceColor,
+                gradient: isSelected && isDark 
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.black, const Color(0xFF300000)],
+                      )
+                    : null,
                 borderRadius: BorderRadius.circular(20),
-                border: isSelected ? null : Border.all(color: Colors.grey.shade200),
+                border: isSelected 
+                    ? (isDark ? Border.all(color: primaryRed.withOpacity(0.5)) : null)
+                    : Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
                 boxShadow: isSelected 
                   ? [BoxShadow(color: primaryRed.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] 
                   : [],
@@ -445,7 +493,7 @@ class _NewOrderState extends State<NewOrder> {
               child: Text(
                 capitalize(categoria),
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[600],
+                  color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600]),
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Nats',
                   fontSize: 16,
@@ -458,9 +506,10 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
-  Widget _buildPratosList() {
+  Widget _buildPratosList(Color surfaceColor, Color textColor, Color primaryRed, Color itemBackground) {
     final pratos = pratosPorCategoria[categoriaSelecionada] ?? [];
-    
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       itemCount: pratos.length,
@@ -473,11 +522,11 @@ class _NewOrderState extends State<NewOrder> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -497,7 +546,7 @@ class _NewOrderState extends State<NewOrder> {
                           fontFamily: 'Nats',
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: darkText,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -515,14 +564,14 @@ class _NewOrderState extends State<NewOrder> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: backgroundApp,
+                    color: itemBackground,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
                       _buildQtyButton(Icons.remove, () {
                         if (qtd > 0) setState(() => quantidades[id] = qtd - 1);
-                      }),
+                      }, primaryRed),
                       Container(
                         width: 30,
                         alignment: Alignment.center,
@@ -532,13 +581,13 @@ class _NewOrderState extends State<NewOrder> {
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Nats',
-                            color: qtd > 0 ? primaryRed : Colors.grey,
+                            color: qtd > 0 ? primaryRed : (isDark ? Colors.grey[600] : Colors.grey),
                           ),
                         ),
                       ),
                       _buildQtyButton(Icons.add, () {
                         setState(() => quantidades[id] = qtd + 1);
-                      }),
+                      }, primaryRed),
                     ],
                   ),
                 ),
@@ -550,31 +599,32 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
-  Widget _buildQtyButton(IconData icon, VoidCallback onTap) {
+  Widget _buildQtyButton(IconData icon, VoidCallback onTap, Color color) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(8),
-        child: Icon(icon, size: 20, color: primaryRed),
+        child: Icon(icon, size: 20, color: color),
       ),
     );
   }
 
-  Widget _buildBottomSummary() {
+  Widget _buildBottomSummary(Color surfaceColor, Color subTextColor, Color textColor, Color primaryRed) {
     final int count = _getTotalItens();
     final double total = _getValorTotal();
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
 
     if (count == 0) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -589,12 +639,12 @@ class _NewOrderState extends State<NewOrder> {
               children: [
                 Text(
                   '$count itens',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: subTextColor, fontSize: 14),
                 ),
                 Text(
                   'R\$ ${total.toStringAsFixed(2)}',
                   style: TextStyle(
-                    color: darkText,
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
                     fontFamily: 'Nats',
@@ -633,16 +683,16 @@ class _NewOrderState extends State<NewOrder> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(Color textColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.restaurant_menu_rounded, size: 80, color: Colors.grey[300]),
+          Icon(Icons.restaurant_menu_rounded, size: 80, color: textColor.withOpacity(0.5)),
           const SizedBox(height: 16),
           Text(
             'Cardápio indisponível.',
-            style: TextStyle(color: Colors.grey[400], fontSize: 18, fontFamily: 'Nats'),
+            style: TextStyle(color: textColor, fontSize: 18, fontFamily: 'Nats'),
           ),
         ],
       ),

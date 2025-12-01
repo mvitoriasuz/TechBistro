@@ -5,6 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:techbistro/src/constants/app_colors.dart';
 import 'dart:ui';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
@@ -66,11 +69,56 @@ class _UsersPageState extends State<UsersPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _printMenu(BuildContext context, String url) async {
-    final uri = Uri.parse(url);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async {
+          final doc = pw.Document();
+
+          doc.addPage(
+            pw.Page(
+              pageFormat: format,
+              build: (pw.Context context) {
+                return pw.Center(
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        'TechBistro',
+                        style: pw.TextStyle(
+                          fontSize: 40,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      pw.Text(
+                        'Acesse nosso Cardápio Digital',
+                        style: const pw.TextStyle(fontSize: 20),
+                      ),
+                      pw.SizedBox(height: 40),
+                      pw.BarcodeWidget(
+                        barcode: pw.Barcode.qrCode(),
+                        data: url,
+                        width: 250,
+                        height: 250,
+                      ),
+                      pw.SizedBox(height: 40),
+                      pw.Text(
+                        url,
+                        style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+
+          return doc.save();
+        },
+      );
     } catch (e) {
-      if (context.mounted) _showError(context, 'Erro ao abrir para impressão');
+      if (context.mounted) _showError(context, 'Erro ao gerar impressão: $e');
     }
   }
 

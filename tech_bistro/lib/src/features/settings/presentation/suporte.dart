@@ -3,19 +3,89 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme_controller.dart';
 
-class HistoricoSuportePage extends ConsumerWidget {
+class HistoricoSuportePage extends ConsumerStatefulWidget {
   const HistoricoSuportePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoricoSuportePage> createState() => _HistoricoSuportePageState();
+}
+
+class _HistoricoSuportePageState extends ConsumerState<HistoricoSuportePage> {
+  List<dynamic> _chamados = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistorico();
+  }
+
+  Future<void> _fetchHistorico() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final response = await Supabase.instance.client
+          .from('suporte_chamados')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _chamados = response;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar histórico: $e')),
+        );
+      }
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final date = DateTime.parse(dateStr).toLocal();
+      final dia = date.day.toString().padLeft(2, '0');
+      final mes = date.month.toString().padLeft(2, '0');
+      final ano = date.year;
+      final hora = date.hour.toString().padLeft(2, '0');
+      final min = date.minute.toString().padLeft(2, '0');
+      
+      return '$dia/$mes/$ano $hora:$min';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'resolvido':
+      case 'concluido':
+        return Colors.green;
+      case 'em andamento':
+        return Colors.blue;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeProvider = ref.watch(themeControllerProvider);
     final isDark = themeProvider.isDarkMode;
     
     final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     final Color primaryRed = const Color(0xFF840011);
     final Color darkRed = const Color(0xFF510006);
-    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
     final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
     final List<Color> gradientColors = isDark 
         ? [Colors.black, const Color(0xFF300000)] 
@@ -117,37 +187,127 @@ class HistoricoSuportePage extends ConsumerWidget {
               children: [
                 const SizedBox(height: 20),
                 Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(30),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Icon(Icons.history_toggle_off_rounded, size: 60, color: Colors.grey[400]),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Nenhum chamado encontrado',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontFamily: 'Nats',
-                          ),
-                        ),
-                      ],
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
                     ),
+                    child: _isLoading 
+                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                      : _chamados.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(30),
+                                  decoration: BoxDecoration(
+                                    color: surfaceColor,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(Icons.history_toggle_off_rounded, size: 60, color: Colors.grey[400]),
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'Nenhum chamado encontrado',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'Nats',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            itemCount: _chamados.length,
+                            itemBuilder: (context, index) {
+                              final chamado = _chamados[index];
+                              final status = chamado['status'] ?? 'pendente';
+                              final colorStatus = _getStatusColor(status);
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: surfaceColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            chamado['topico'] ?? 'Sem tópico',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: textColor,
+                                              fontFamily: 'Nats',
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: colorStatus.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: colorStatus.withOpacity(0.5)),
+                                          ),
+                                          child: Text(
+                                            status.toUpperCase(),
+                                            style: TextStyle(
+                                              color: colorStatus,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      chamado['descricao'] ?? '',
+                                      style: TextStyle(
+                                        color: subtitleColor,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      _formatDate(chamado['created_at']),
+                                      style: TextStyle(
+                                        color: Colors.grey[400],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ),
               ],

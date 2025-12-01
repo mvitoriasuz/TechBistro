@@ -1,26 +1,23 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:techbistro/src/constants/app_colors.dart';
+import 'package:techbistro/src/features/settings/presentation/theme_controller.dart';
 import '../../mesa/presentation/mesa.dart';
 import '../../cozinha/presentation/cozinha.dart';
 
-class SalaoPage extends StatefulWidget {
+class SalaoPage extends ConsumerStatefulWidget {
   const SalaoPage({super.key});
 
   @override
-  State<SalaoPage> createState() => _SalaoPageState();
+  ConsumerState<SalaoPage> createState() => _SalaoPageState();
 }
 
-class _SalaoPageState extends State<SalaoPage> {
+class _SalaoPageState extends ConsumerState<SalaoPage> {
   List<int> mesas = [];
   bool isLoading = true;
   StreamSubscription<List<Map<String, dynamic>>>? _mesasSubscription;
-  
-  final Color primaryRed = const Color(0xFF840011);
-  final Color backgroundLight = const Color(0xFFF8F9FA);
-  final Color darkText = const Color(0xFF2D2D2D);
   
   @override
   void initState() {
@@ -61,6 +58,12 @@ class _SalaoPageState extends State<SalaoPage> {
   Future<void> adicionarMesa() async {
     final TextEditingController mesaController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final primaryRed = const Color(0xFF840011);
+    final inputFill = isDark ? const Color(0xFF2C2C2C) : Colors.grey[50];
+    final hintColor = isDark ? Colors.grey[500] : Colors.grey[300];
+    final borderColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
 
     showDialog(
       context: context,
@@ -74,7 +77,7 @@ class _SalaoPageState extends State<SalaoPage> {
             children: [
               Text(
                 'Qual o número da nova mesa?',
-                style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 16),
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -84,16 +87,16 @@ class _SalaoPageState extends State<SalaoPage> {
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   hintText: '00',
-                  hintStyle: TextStyle(color: Colors.grey[300], fontFamily: 'Nats'),
+                  hintStyle: TextStyle(color: hintColor, fontFamily: 'Nats'),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: inputFill,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: Colors.grey[200]!),
+                    borderSide: BorderSide(color: borderColor),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: Colors.grey[200]!),
+                    borderSide: BorderSide(color: borderColor),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -114,7 +117,7 @@ class _SalaoPageState extends State<SalaoPage> {
         actions: [
           _buildDialogButton(
             label: 'Cancelar',
-            color: Colors.grey[600]!,
+            color: isDark ? Colors.grey[600]! : Colors.grey[600]!,
             onPressed: () => Navigator.pop(context),
             isPrimary: false,
           ),
@@ -142,6 +145,10 @@ class _SalaoPageState extends State<SalaoPage> {
 
   Future<void> _confirmarExclusaoMesa(int numeroMesa) async {
     final supabase = Supabase.instance.client;
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final primaryRed = const Color(0xFF840011);
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+
     try {
       final pedidosResponse = await supabase
           .from('pedidos')
@@ -218,10 +225,10 @@ class _SalaoPageState extends State<SalaoPage> {
             content: RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: TextStyle(color: Colors.grey[700], fontSize: 16, height: 1.5, fontFamily: 'Roboto'),
+                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 16, height: 1.5, fontFamily: 'Roboto'),
                 children: [
                   const TextSpan(text: 'A Mesa '),
-                  TextSpan(text: '$numeroMesa', style: TextStyle(fontWeight: FontWeight.bold, color: darkText)),
+                  TextSpan(text: '$numeroMesa', style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
                   const TextSpan(text: ' será arquivada.\nTodos os pedidos foram entregues e a conta quitada.'),
                 ],
               ),
@@ -229,7 +236,7 @@ class _SalaoPageState extends State<SalaoPage> {
             actions: [
               _buildDialogButton(
                 label: 'Voltar',
-                color: Colors.grey[600]!,
+                color: isDark ? Colors.grey[600]! : Colors.grey[600]!,
                 onPressed: () => Navigator.pop(context),
                 isPrimary: false,
               ),
@@ -273,6 +280,9 @@ class _SalaoPageState extends State<SalaoPage> {
   }
 
   void _showBloqueioDialog(String title, String msg) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final primaryRed = const Color(0xFF840011);
+
     showDialog(
       context: context,
       builder: (context) => _buildModernDialog(
@@ -282,7 +292,7 @@ class _SalaoPageState extends State<SalaoPage> {
         content: Text(
           msg,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey[700], height: 1.5, fontSize: 15),
+          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], height: 1.5, fontSize: 15),
         ),
         actions: [
           _buildDialogButton(
@@ -297,6 +307,7 @@ class _SalaoPageState extends State<SalaoPage> {
   }
 
   void _showSnackBar(String msg, {bool isError = false}) {
+    final primaryRed = const Color(0xFF840011);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -317,8 +328,16 @@ class _SalaoPageState extends State<SalaoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ref.watch(themeControllerProvider);
+    final isDark = themeProvider.isDarkMode;
+
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color primaryRed = const Color(0xFF840011);
+    final Color subtitleColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+
     return Scaffold(
-      backgroundColor: backgroundLight,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -340,7 +359,7 @@ class _SalaoPageState extends State<SalaoPage> {
               Text(
                 'Visão geral das mesas',
                 style: TextStyle(
-                  color: Colors.grey[500],
+                  color: subtitleColor,
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                 ),
@@ -352,11 +371,11 @@ class _SalaoPageState extends State<SalaoPage> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.08),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -389,7 +408,7 @@ class _SalaoPageState extends State<SalaoPage> {
                             Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
+                                color: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100],
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(Icons.storefront_outlined, size: 60, color: Colors.grey[400]),
@@ -397,7 +416,11 @@ class _SalaoPageState extends State<SalaoPage> {
                             const SizedBox(height: 16),
                             Text(
                               'Nenhuma mesa ativa',
-                              style: TextStyle(color: Colors.grey[400], fontSize: 18, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[400], 
+                                fontSize: 18, 
+                                fontWeight: FontWeight.w500
+                              ),
                             ),
                           ],
                         ),
@@ -435,116 +458,130 @@ class _SalaoPageState extends State<SalaoPage> {
   }
   
   Widget _buildMesaCardRed(int numero) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final primaryRed = const Color(0xFF840011);
+    final darkRed = const Color(0xFF510006);
+    final darkText = const Color(0xFF2D2D2D);
+
+    final List<Color> gradientColors = isDark 
+        ? [Colors.black, const Color(0xFF300000)] 
+        : [darkRed, primaryRed];
+
     return Container(
       decoration: BoxDecoration(
-        color: primaryRed,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
+        ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryRed.withOpacity(0.25),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.25),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: () {
-              Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MesaPage(numeroMesa: numero)),
-            ).then((_) => carregarMesas());
-          },
-          child: Stack(
-            children: [
-              Positioned(
-                top: -30,
-                right: -30,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.white.withOpacity(0.05),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MesaPage(numeroMesa: numero)),
+              ).then((_) => carregarMesas());
+            },
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -30,
+                  right: -30,
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.white.withOpacity(0.05),
+                  ),
                 ),
-              ),
 
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8, right: 8),
-                      child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_horiz, color: Colors.white70),
-                        padding: EdgeInsets.zero,
-                        elevation: 4,
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        onSelected: (value) {
-                          if (value == 'excluir') _confirmarExclusaoMesa(numero);
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem<String>(
-                            value: 'excluir',
-                            child: Row(
-                              children: [
-                                Icon(Icons.assignment_turned_in_outlined, color: darkText, size: 20), 
-                                const SizedBox(width: 12),
-                                Text('Finalizar Mesa', style: TextStyle(color: darkText, fontWeight: FontWeight.w500)),
-                              ],
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 8),
+                        child: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_horiz, color: Colors.white70),
+                          padding: EdgeInsets.zero,
+                          elevation: 4,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          onSelected: (value) {
+                            if (value == 'excluir') _confirmarExclusaoMesa(numero);
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem<String>(
+                              value: 'excluir',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.assignment_turned_in_outlined, color: darkText, size: 20), 
+                                  const SizedBox(width: 12),
+                                  Text('Finalizar Mesa', style: TextStyle(color: darkText, fontWeight: FontWeight.w500)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: SvgPicture.asset(
+                          'assets/mesa.svg',
+                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                          placeholderBuilder: (_) => const Icon(Icons.table_restaurant, size: 50, color: Colors.white),
+                        ),
+                      ),
+                    ),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'MESA',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withOpacity(0.8),
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          Text(
+                            '$numero',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'Nats',
+                              height: 1.0
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SvgPicture.asset(
-                        'assets/mesa.svg',
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                        placeholderBuilder: (_) => const Icon(Icons.table_restaurant, size: 50, color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'MESA',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.8),
-                            letterSpacing: 2.0,
-                          ),
-                        ),
-                        Text(
-                          '$numero',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontFamily: 'Nats',
-                            height: 1.0
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -558,6 +595,11 @@ class _SalaoPageState extends State<SalaoPage> {
     IconData? icon,
     Color? iconColor,
   }) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
+    final primaryRed = const Color(0xFF840011);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       elevation: 0,
@@ -565,11 +607,11 @@ class _SalaoPageState extends State<SalaoPage> {
       child: Container(
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.2),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),
@@ -592,10 +634,10 @@ class _SalaoPageState extends State<SalaoPage> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D2D2D),
+                color: textColor,
                 letterSpacing: -0.5,
               ),
             ),
@@ -617,6 +659,9 @@ class _SalaoPageState extends State<SalaoPage> {
     required VoidCallback onPressed,
     bool isPrimary = false,
   }) {
+    final isDark = ref.read(themeControllerProvider).isDarkMode;
+    final surfaceColor = isDark ? const Color(0xFF2C2C2C) : Colors.grey[100]!;
+
     if (isPrimary) {
       return ElevatedButton(
         onPressed: onPressed,
@@ -636,10 +681,10 @@ class _SalaoPageState extends State<SalaoPage> {
       return TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          foregroundColor: Colors.grey[600],
+          foregroundColor: color,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: Colors.grey[100],
+          backgroundColor: surfaceColor,
         ),
         child: Text(
           label,

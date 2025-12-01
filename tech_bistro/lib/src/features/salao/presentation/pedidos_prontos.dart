@@ -69,8 +69,8 @@ class _PedidosProntosPageState extends ConsumerState<PedidosProntosPage> {
 
   Future<void> marcarComoEntregue(int idPedido, String prato, int qtd, int mesa) async {
     final isDark = ref.read(themeControllerProvider).isDarkMode;
-    final textColor = isDark ? const Color(0xFFEEEEEE) : const Color(0xFF2D2D2D);
     final primaryRed = const Color(0xFF840011);
+    final dialogContentColor = isDark ? Colors.grey[300] : Colors.grey[700];
 
     final bool? confirmar = await showDialog<bool>(
       context: context,
@@ -79,13 +79,13 @@ class _PedidosProntosPageState extends ConsumerState<PedidosProntosPage> {
         content: Text(
           'Confirmar a entrega de ${qtd}x $prato da Mesa $mesa?',
           textAlign: TextAlign.center,
-          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 16),
+          style: TextStyle(color: dialogContentColor, fontSize: 16),
         ),
         icon: Icons.check_circle_outline,
         actions: [
           _buildDialogButton(
             label: 'Cancelar',
-            color: isDark ? Colors.grey[600]! : Colors.grey[600]!,
+            color: Colors.grey[600]!,
             onPressed: () => Navigator.of(context).pop(false),
           ),
           _buildDialogButton(
@@ -160,6 +160,9 @@ class _PedidosProntosPageState extends ConsumerState<PedidosProntosPage> {
     final List<Color> cardGradient = isDark 
         ? [Colors.black, const Color(0xFF300000)] 
         : [darkRed, primaryRed];
+
+    final Color buttonColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color buttonTextColor = isDark ? Colors.white : primaryRed;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -414,13 +417,13 @@ class _PedidosProntosPageState extends ConsumerState<PedidosProntosPage> {
                                       alignment: Alignment.center,
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: buttonColor,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         'ENTREGAR',
                                         style: TextStyle(
-                                          color: primaryRed,
+                                          color: buttonTextColor,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),

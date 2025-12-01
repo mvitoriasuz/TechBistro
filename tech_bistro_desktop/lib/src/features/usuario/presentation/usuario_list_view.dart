@@ -8,7 +8,7 @@ class UsuarioListView extends StatefulWidget {
   const UsuarioListView({
     super.key,
     required this.onCreate,
-    required this.onEdit,
+    required this.onEdit, required String usuarioEstabelecimento,
   });
 
   @override

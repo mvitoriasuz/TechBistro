@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tech_bistro_desktop/src/features/cardapio/presentation/prato_list.dart';
-import 'package:tech_bistro_desktop/src/features/usuario/usuario_list.dart';
+import 'package:tech_bistro_desktop/src/features/usuario/presentation/usuario_list_view.dart';
 import 'package:tech_bistro_desktop/src/ui/theme/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildContent() {
     switch (selectedIndex) {
       case 0:
-        return const UsuarioListPage();
+        return const UsuarioListView();
       case 1:
         return const PratoListPage(idEstabelecimento: '39555038000166');  
       case 2:

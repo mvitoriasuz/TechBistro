@@ -89,6 +89,7 @@ class _UsuarioEditFormState extends State<UsuarioEditForm> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600),
         child: Card(
+            color: Colors.white, // ← FUNDO NEUTRO
           margin: const EdgeInsets.all(24),
           elevation: 4,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

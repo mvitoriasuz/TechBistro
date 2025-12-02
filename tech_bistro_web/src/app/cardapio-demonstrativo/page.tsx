@@ -79,29 +79,29 @@ export default function CardapioDemonstrativo() {
         <div className="container mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             <div className="group">
-              <ScanLine className="w-10 h-10 text-[#510006] mb-6 group-hover:text-[#510006] transition-colors text-gray-900" />
-              <h3 className="text-sm font-bold uppercase tracking-widest mb-3">QR Code Instantâneo</h3>
+              <ScanLine className="w-10 h-10 text-[#510006] mb-6 group-hover:text-[#510006] transition-colors " />
+              <h3 className="text-sm font-bold uppercase tracking-widest mb-3 text-gray-900">QR Code Instantâneo</h3>
               <p className="text-gray-600 text-xs leading-relaxed">
                 Cada mesa possui um código único. O cliente escaneia e o sistema já identifica onde entregar o pedido.
               </p>
             </div>
             <div className="group">
               <Camera className="w-10 h-10 text-[#510006] mb-6 group-hover:text-[#C5A51000647E] transition-colors" />
-              <h3 className="text-sm font-bold uppercase tracking-widest mb-3">Visual Imersivo</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest mb-3 text-gray-900">Visual Imersivo</h3>
               <p className="text-gray-600 text-xs leading-relaxed">
                 Fotos em alta definição que despertam o desejo e aumentam o ticket médio por pedido.
               </p>
             </div>
             <div className="group">
               <Zap className="w-10 h-10 text-[#510006] mb-6 group-hover:text-[#510006] transition-colors" />
-              <h3 className="text-sm font-bold uppercase tracking-widest mb-3">Cozinha Sincronizada</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest mb-3 text-gray-900">Cozinha Sincronizada</h3>
               <p className="text-gray-600 text-xs leading-relaxed">
                 O pedido sai do celular do cliente e aparece na tela da cozinha em milissegundos.
               </p>
             </div>
             <div className="group">
               <CheckCircle2 className="w-10 h-10 text-[#510006] mb-6 group-hover:text-[#510006] transition-colors" />
-              <h3 className="text-sm font-bold uppercase tracking-widest mb-3">Auto Gestão</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest mb-3 text-gray-900">Auto Gestão</h3>
               <p className="text-gray-600 text-xs leading-relaxed">
                 O cliente pode fechar a conta e realizar o pagamento sem precisar chamar o garçom.
               </p>

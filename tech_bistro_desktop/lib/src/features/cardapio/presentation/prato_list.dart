@@ -153,7 +153,7 @@ class _PratoListPageState extends State<PratoListPage> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: const Color(0xFFA58570),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 16,
